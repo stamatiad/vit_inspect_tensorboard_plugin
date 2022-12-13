@@ -20,6 +20,9 @@ module.exports = {
     output: {
         filename: '[name].js',
         path: __dirname + '/static/js',
+        // Webpack exports the project as module. This is experimental:
+        // https://github.com/webpack/webpack/issues/2933#issuecomment-774253975
+        // Don't blame me if it breaks
         //globalObject: 'this',
         library: {
             type: "module",

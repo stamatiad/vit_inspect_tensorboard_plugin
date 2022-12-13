@@ -26,6 +26,9 @@ from werkzeug import wrappers
 
 from vit_inspect import metadata
 
+import pydevd_pycharm
+pydevd_pycharm.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)
+
 
 class VitInspect(base_plugin.TBPlugin):
     plugin_name = metadata.PLUGIN_NAME
