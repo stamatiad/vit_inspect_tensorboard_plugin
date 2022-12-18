@@ -27,7 +27,7 @@ setuptools.setup(
     },
     entry_points={
         "tensorboard_plugins": [
-            "vit_inspect = vit_inspect.plugin:VitInspect",
+            "vit_inspect = vit_inspect.vit_inspect_plugin:VitInspectPlugin",
         ],
     },
 )

@@ -31,5 +31,20 @@ module.exports = {
     },
     experiments: {
         outputModule: true
-    }
+    },
+    module: {
+       rules: [
+           {
+               test: /\.(js|ts)x?$/,
+               exclude: /node_modules/,
+               use: {
+                   loader: "babel-loader"
+               }
+           },
+           {
+               test: /\.css$/,
+               use: ['style-loader', 'css-loader']
+           }
+       ]
+   }
 }

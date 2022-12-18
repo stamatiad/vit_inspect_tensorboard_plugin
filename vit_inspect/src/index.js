@@ -1,42 +1,59 @@
-//import App from './App';
-//import React from 'react';
-//import ReactDOM from 'react-dom/client';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
 //import ReactDOM from "@types/react-dom/client";
 //import React from "@types/react";
 
 
+export async function render() {
+
+    /*
+    const main_css = document.createElement('link');
+    main_css.setAttribute("href", "main.css");
+    main_css.setAttribute("rel", "stylesheet");
+    main_css.setAttribute("type", "text/css");
+    document.head.appendChild(main_css);
+     */
+
+    // Create the root element for our React app:
+    const root_element = document.createElement("div");
+    root_element.setAttribute("id", "root")
+    document.body.appendChild(root_element);
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
+    );
+}
+
 /*
 export async function render() {
-const root_element = Document.createElement("div");
-root_element.setAttribute("id", "root")
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-);
-const p2 = 1337;
-const data = Promise.all([p2]).then((values) => {
-  console.log(values); // [3, 1337, "foo"]
-});
-}
-*/
-// Copyright 2019 The TensorFlow Authors. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// ==============================================================================
+    // Append styles and js on the head element:
+    const bcss = createElement('link');
+    bcss.setAttribute("href", "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css");
+    bcss.setAttribute("rel", "stylesheet");
+    bcss.setAttribute("integrity", "sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65");
+    bcss.setAttribute("crossorigin", "anonymous");
+    document.head.appendChild(bcss);
 
-export async function render() {
+    const bjs = createElement('link');
+    bjs.setAttribute("src", "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js");
+    bjs.setAttribute("integrity", "sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4");
+    bjs.setAttribute("crossorigin", "anonymous");
+    document.head.appendChild(bjs);
+
+    // Custom sidebar css:
+    // TODO: these should be generaged by React! We cannot buldle them,
+    // because we shoulc alse create a GET target for them.
+    const sbcss = createElement('link');
+    sbcss.setAttribute("href", "css/sidebar.css");
+    sbcss.setAttribute("rel", "stylesheet");
+    document.head.appendChild(sbcss);
+
+
+
   const msg = createElement('p', 'Fetching data…');
   document.body.appendChild(msg);
 
@@ -121,6 +138,8 @@ function createElement(tag, children) {
   }
   return result;
 }
+
+ */
 
 
 
