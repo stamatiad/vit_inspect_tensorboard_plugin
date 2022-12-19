@@ -6,14 +6,14 @@ import '../static/js/bootstrap.min.js'
 import '../static/css/bootstrap.min.css';
 import '../static/css/main.css';
 
-class TbImage extends React.Component{
+class WeightsImg extends React.Component{
     constructor(props) {
         super(props);
         this.state = {
-            key: 0,
-            layer: 1,
-            head: 1,
-            src: "individualImage?blob_key=WyIiLCJpbWFnZXMiLCIuIiwiVmlUMTYiLDAsNV0"
+            layer: props.layer,
+            head: props.head,
+            //src: "individualImage?blob_key=WyIiLCJpbWFnZXMiLCIuIiwiVmlUMTYiLDAsNV0"
+            src: '/plugin/vit_inspect/individualImage?blob_key=WyIiLCIuIiwiVmlUMTYiLDAsM10'
         };
     }
     componentDidMount() {
@@ -22,41 +22,16 @@ class TbImage extends React.Component{
 
     render(){
         return (
-            <div className="" id="weights-img">
+            <div className="" id="weights-img"
+                 style={{gridArea: `${this.state.layer} ${this.state.head} 
+                 ${this.state.layer} ${this.state.head}`}}
+            >
                 <img className="img-thumbnail" src={this.state.src}/>
             </div>
         );
     }
 }
-/*
-//className="pixelq-col"
-class Row extends React.Component{
-    constructor(props) {
-        super(props);
-        console.log("ROW CONSTRUCTOR");
-    }
-    render() {
-        console.log("ROW RENDER");
-        return (
-            <div className="row g-0">
-                That's a row, yo!
-                {this.props.children}
-            </div>
-        );
-    }
-};
-class Col extends React.Component{
-    constructor(props) {
-        super(props);
-        console.log("COL CONSTRUCTOR");
-    }
-    render() {
-        console.log("COL RENDER");
-        return (<div>I'm a column!</div>);
-    }
-};
 
- */
 class GridCell extends React.Component {
     // That's why:
     //https://stackoverflow.com/questions/29810914/react-js-onclick-cant-pass-value-to-method
@@ -65,19 +40,30 @@ class GridCell extends React.Component {
         this.state= {
             l: props.layer,
             h: props.head,
+            class_style: ""
         };
     }
 
     click = () => {
         this.props.select(this.state.l, this.state.h);
     }
+    over = () => {
+        this.setState({class_style: "border border-danger shadow"})
+    }
+    out = () => {
+        this.setState({class_style: ""})
+    }
 
     render() {
         return (
             <div
                 onClick={this.click}
+                onMouseOver={this.over}
+                onMouseOut={this.out}
+                className={this.state.class_style}
                 style={
-                {gridArea: `${this.state.l} ${this.state.h} ${this.state.l} ${this.state.h}`}
+                {gridArea: `${this.state.l} ${this.state.h} ${this.state.l} ${this.state.h}`
+                }
             }>
             </div>
         );
@@ -99,7 +85,8 @@ class TbPixelQuery extends React.Component {
         this.GridStyle = {
             display: "grid",
             gridTemplateRows: "repeat("+this.state.layers+", 1fr)",
-            gridTemplateColumns: "repeat("+this.state.heads+", 1fr)"
+            gridTemplateColumns: "repeat("+this.state.heads+", 1fr)",
+            padding: "0.25rem"
         }
     }
 
@@ -120,59 +107,22 @@ class TbPixelQuery extends React.Component {
         for (let l=0; l < this.state.layers; l++) {
             for (let h=0; h < this.state.heads; h++) {
                 grid.push(
-                    <GridCell layer={l} head={h} select={this.selectQueryPixel}/>
+                    <GridCell key={l*12+h} layer={l} head={h}
+                              select={this.selectQueryPixel}/>
                 );
             }
         }
         return grid;
     };
 
-
-    createQueryGrid() {
-        // Create the grid to enable pixel query visualization.
-        function Row(props) {
-            return (
-                <div className="row g-0">
-                    {props.children}
-                </div>
-            );
-        };
-        function Col() {
-            return (
-                <div className="pixelq-col">
-
-                </div>
-            );
-        };
-        var grid = [];
-        //var col = (<Col key={0}/>);
-
-        for (let l=0; l < this.state.layers; l++) {
-            var tmp = [];
-            for (let h=0; h < this.state.heads; h++) {
-                tmp.push(
-                    <Col key={h}/>
-                );
-            }
-            grid.push(
-                <Row key={l}>{tmp}</Row>
-            );
-        }
-
-        // Update the state with the created grid:
-        this.setState(
-            {
-                grid: grid
-            }
-        );
-    }
-
     render(){
+        // TODO: make sure that always img-thumbnail and grid will
+        // have the same padding!
         return (
             <div>
                 <span className="fs-5">Pixel Query</span>
                 <div className="pixelq-img" id="weights-img">
-                    <img className="img-thumbnail" src={this.state.src}/>
+                    <img className="img-thumbnail" src={this.state.src} style={{padding: "0.25rem"}}/>
                     <div className="pixelq-grid" style={this.GridStyle}>
                         {
                             this.Grid()
@@ -188,13 +138,13 @@ class TbPixelQuery extends React.Component {
 function TbDashboardLayout() {
   return (
       <main>
-          <TbSidebar></TbSidebar>
-          <TbVizualization></TbVizualization>
+          <Sidebar/>
+          <WeightsImgGrid layers={12} heads={12}/>
       </main>
   );
 }
 
-function TbSidebar() {
+function Sidebar() {
   return (
     <div className="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark"
          id={"sidebar"}>
@@ -247,21 +197,47 @@ function TbSidebar() {
   );
 }
 
-function TbVizualization() {
-    const arr = [];
-    for (let l=0; l < 4; l++) {
-        for (let h=0; h < 4; h++) {
-            arr.push(<TbImage key={l*12+h} layer={l} head={h}/>);
+class WeightsImgGrid extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            layers: props.layers,
+            heads: props.heads
+        };
+        // Generate the styles to be used in grid:
+        this.GridStyle = {
+            display: "grid",
+            gridTemplateRows: "repeat("+this.state.layers+", 1fr)",
+            gridTemplateColumns: "repeat("+this.state.heads+", 1fr)"
         }
     }
-    return (
-        <div className="container-fluid">
-            <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
-             id={"visualization"}>
-                {arr}
+
+    Grid () {
+        // Array of React Components:
+        var grid = [];
+
+        for (let l=0; l < this.state.layers; l++) {
+            for (let h=0; h < this.state.heads; h++) {
+                grid.push(
+                    <WeightsImg key={l*12+h} layer={l} head={h}/>
+                );
+            }
+        }
+        return grid;
+    };
+
+    render() {
+        return (
+            <div className="container-fluid">
+                <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
+                     id={"visualization"}>
+                    <div style={this.GridStyle}>
+                        {this.Grid()}
+                    </div>
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 class App extends React.Component {
