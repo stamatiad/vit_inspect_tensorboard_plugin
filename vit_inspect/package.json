@@ -25,6 +25,13 @@
     "build": "webpack --config webpack.config.js"
   },
   "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 8
+    },
+    "env": {
+      "node": true,
+      "es6": true
+    },
     "extends": [
       "react-app",
       "react-app/jest"
