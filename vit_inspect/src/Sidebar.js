@@ -56,12 +56,13 @@ class Sidebar extends React.Component {
                 <LayerQuery
                     model={this.props.model}
                     selectLayer={this.props.selectLayer}
+                    fetchLayerMaps={this.props.fetchLayerMaps}
                     up={this.props.up}
                 />
                 <PixelQuery
                     //len_in_patches={this.props.len_in_patches}
                     model={this.props.model}
-                    imgsrc={this.props.imgsrc}
+                    fetchImgBlobKey={this.props.fetchImgBlobKey}
                     queryPixel={this.props.queryPixel}
                     up={this.props.up}
                 />

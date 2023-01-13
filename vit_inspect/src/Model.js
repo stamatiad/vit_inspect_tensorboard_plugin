@@ -16,10 +16,19 @@ class Model extends React.Component {
     // This component holds the model that is being visualized.
     constructor(props) {
         super(props);
+        /* This component is the main App. It holds the model and visualizer
+         states. Every param and selection is stored in this state. Yet, on
+         its update, child components are responsible to check and update
+         their states if necessary.
+         If some child component implements a loading functionality, should
+          save on this state on completion, so all other childs get updated
+           promptly and properly.
+         */
         this.state = {
             // These are the model props that are used by all child components:
             models_arr: [],
-            // THIS GETS OVERWITTEN when the TB loads the model from TF!
+            // THE MODEL OBJ GETS OVERWITTEN when the TB loads the model
+            // from TF!
             // These values are just to create the state structure! DO NOT
             // ADD VALUES INSIDE THE MODEL OBJECT, THEY WILL BE OVERWRITTEN!
             model: {
@@ -34,9 +43,13 @@ class Model extends React.Component {
                 // Although not directly model's properties, we keep them
                 // here, so we need to pass only the model as React prop around.
             },
-            // These are used by the visualizer to render the appropriate
-            // maps. So, update their state when everything is ready to be
-            // visualized in the main window.
+            /* These are used by the visualizer to render the appropriate
+               maps. So, update their state when everything is ready to be
+               visualized in the main window.
+               These are tricky params, because on every layer load will
+                cause every child to re-render. So each child that should
+                 take responsibility and check if should re-render.
+             */
             selected_layer: 0,
             selected_token: 0,
         };
@@ -259,6 +272,8 @@ class Model extends React.Component {
                         model={this.state.model}
                         selectModel={this.selectModel}
                         selectLayer={this.selectLayer}
+                        fetchImgBlobKey={this.fetchImgBlobKey}
+                        fetchLayerMaps={this.fetchLayerMaps}
                         queryPixel={this.queryPixel}
                         up={this.updateModel}
                     />

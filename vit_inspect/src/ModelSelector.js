@@ -13,6 +13,16 @@ class ModelSelector extends React.Component {
         this.renderModelList = this.renderModelList.bind(this);
     }
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        /* This cmp is responsible to check if the Model cmp is updated, and
+           if it did, to update its state that is not handled by the
+           re-rendering.
+           This cmp is responsible to:
+           1. get the proper number of patch sizes and update the grid,
+           2. load the src image for the batch,
+
+         */
+    }
 
     componentDidMount() {
         /*
