@@ -43,6 +43,7 @@ class PixelQuery extends React.Component {
             qi: 0,
             qj: 0,
             batch_blob_key: "",
+            batch_img_url: ""
         };
         this.selectQueryPixel = this.selectQueryPixel.bind(this);
         this.fetchBatchBlobKey = this.fetchBatchBlobKey.bind(this);
@@ -53,7 +54,9 @@ class PixelQuery extends React.Component {
         if ((this.props.model.run === nextProps.model.run) &&
             (this.props.model.tag === nextProps.model.tag)){
             // TODO: THIS DOES NOT MATTER, since they get props-updated on change.
-            return false;
+            // TODO: MAKE SURE that component updates after state change
+            //  also! Because the batch img changes the state!!!
+            return true;
         } else {
             return true;
         }
@@ -67,7 +70,8 @@ class PixelQuery extends React.Component {
             <div>
                 <span className="fs-5">Pixel Query</span>
                 <div className="pixelq-img" id="weights-img">
-                    <img className="img-thumbnail" src={this.makeImgUrl()} style={{padding: "0.25rem"}}/>
+                    <img className="img-thumbnail" src={this.state.batch_img_url}
+                         style={{padding: "0.25rem"}}/>
                     <div className="pixelq-grid" style={this.makeGridStyle()}>
                         {
                             this.makeGrid()
@@ -104,14 +108,22 @@ class PixelQuery extends React.Component {
         }
     }
 
+    //==========================================================================
+    // Component functions
+    //==========================================================================
+
     async fetchBatchBlobKey() {
         var cmp = this;
         // Load asynchronously the batch image, by calling the Model's fetch:
         const batch_blob_key = await cmp.props.fetchImgBlobKey(
-            cmp.props.model.run, cmp.props.model.tag, 0
+            cmp.props.model.run, cmp.props.model.tag, 0, ()=>{}
         );
-        cmp.setState({batch_blob_key: batch_blob_key});
-
+        cmp.setState(
+        {
+                batch_blob_key: batch_blob_key,
+                batch_img_url: `individualImage?blob_key=${batch_blob_key}`
+            }
+        );
     }
 
     selectQueryPixel(i, j) {
@@ -159,10 +171,6 @@ class PixelQuery extends React.Component {
         }
         return grid;
     };
-
-    makeImgUrl() {
-        return `individualImage?blob_key=${this.state.batch_blob_key}`;
-    }
 
 }
 

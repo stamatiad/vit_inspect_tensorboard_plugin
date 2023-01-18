@@ -1,4 +1,5 @@
 import React from "react";
+import ButtonProgress from "./ButtonProgress";
 
 
 class LayerQuery extends React.Component {
@@ -6,8 +7,15 @@ class LayerQuery extends React.Component {
         super(props);
         this.state = {
             selected_layer: 0,
+            // The progress related state, will re-render the progress
+            // button component, yet not this component.
+            progress_percentage: 0,
+            progress_label: "Select Layer"
         };
+        this.requestCounter = 0;
+        this.progress = React.createRef();
         this.selectLayer = this.selectLayer.bind(this);
+        this.fetchLayerBlobKeysCallback = this.fetchLayerBlobKeysCallback.bind(this);
     }
 
     shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -24,7 +32,7 @@ class LayerQuery extends React.Component {
         if ((this.props.model.run === nextProps.model.run) &&
             (this.props.model.tag === nextProps.model.tag)){
             // TODO: THIS DOES NOT MATTER, since they get props-updated on change.
-            return false;
+            return true;
         } else {
             return true;
         }
@@ -38,18 +46,10 @@ class LayerQuery extends React.Component {
                     <button className="btn btn-outline-light dropdown-toggle"
                             type="button" id="layerDropdown"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                        <div className="progress-bar bg-warning" role="progressbar"
-                             style={{
-                                 width: "50%",
-                                 height: "100%",
-                                 position: "absolute",
-                                 top: "0",
-                                 left: "0"
-                             }}>
-                        </div>
-                        <div style={{position: "relative"}}>
-                            Showing Layer {this.state.selected_layer}
-                        </div>
+                        <ButtonProgress
+                            progress_label={this.state.progress_label}
+                            progress_percentage={this.state.progress_percentage}
+                        />
                     </button>
                     <ul className="dropdown-menu"
                         aria-labelledby="layerDropdown">
@@ -89,27 +89,93 @@ class LayerQuery extends React.Component {
         }
     }
 
+    //==========================================================================
+    // Component functions
+    //==========================================================================
+
+    updateProgress(percent) {
+        /*
+        Update the style of the progres bar, without re-rendering the whole
+        component.
+        */
+        /*
+        function newPercentage(percent) {
+            return {
+                width: `${percent}%`,
+                height: "100%",
+                position: "absolute",
+                top: "0",
+                left: "0"
+            }
+        };
+        // Update the style of the progress bar
+        this.progress.current.style = newPercentage(percent);
+
+         */
+        this.setState({
+            progress_percentage: percent,
+            progress_label: `Loading Layer ${this.state.selected_layer}: ${this.state.progress_percentage}%.`
+        }, ()=>{
+            console.log(`Loading layer: ${percent}%.`);
+        });
+    }
+
+    fetchLayerBlobKeysCallback() {
+        /*
+        Calculates the percentage of the layer that was loaded so far.
+        Updates the progress at given percentage.
+        */
+        var cmp = this;
+
+        cmp.requestCounter++;
+
+        const num_heads = cmp.props.model.params.num_heads;
+        const len_in_patches = cmp.props.model.params.len_in_patches;
+        const total_tokens = len_in_patches * len_in_patches;
+        const num_requests = total_tokens * num_heads;
+        var percent = Math.floor(100 * cmp.requestCounter / num_requests);
+        // Update the progress at each appropriate percentage:
+        if (percent % 5 == 0 && cmp.prev_percent < percent){
+            cmp.updateProgress(percent);
+            cmp.prev_percent = percent;
+        }
+    }
+
     async fetchLayerBlobKeys() {
         var cmp = this;
         // Load asynchronously the layers maps, by calling the Model's fetch:
-        // TODO: Check where you can save the Promise progress...
+        // IMPORTANT: initialize the counters:
+        cmp.requestCounter = 0;
+        cmp.prev_percent = 0;
+
+        // TODO: since this is async, do here any initializations.
         const attn_blob_key_arr = cmp.props.model.attn_blob_key_arr;
         attn_blob_key_arr[this.state.selected_layer] = await cmp.props.fetchLayerMaps(
-            cmp.props.model, cmp.state.selected_layer
+            cmp.props.model, cmp.state.selected_layer, cmp.fetchLayerBlobKeysCallback
         );
+        // Loading layer completed
+        this.setState({
+            progress_percentage: 100,
+            progress_label: `Layer ${this.state.selected_layer}.`
+        }, ()=>{
+            console.log(`Layer ${this.state.selected_layer} loaded!`);
+        });
     }
 
     selectLayer = (layer_id) => {
         var cmp = this;
         // intercept layer selection to update local state:
-        cmp.setState({selected_layer: layer_id});
-        //TODO: load the layer blobs, displaying progress in the way. Then
-        // pass the updated blobs to the Model component. Then cause the
-        // Visualizer to re-render, displaying the attention maps.
-        cmp.fetchLayerBlobKeys();
+        cmp.setState({
+            selected_layer: layer_id
+        }, ()=>{
+            //TODO: load the layer blobs, displaying progress in the way. Then
+            // pass the updated blobs to the Model component. Then cause the
+            // Visualizer to re-render, displaying the attention maps.
+            cmp.fetchLayerBlobKeys();
 
-        //inform parent Model:
-        cmp.props.selectLayer(layer_id);
+            //inform parent Model:
+            cmp.props.selectLayer(layer_id);
+        });
     }
 
 

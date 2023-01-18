@@ -3,6 +3,7 @@ import ModelItem from "./ModelItem";
 import ModelSelector from "./ModelSelector";
 import PixelQuery from "./PixelQuery";
 import Sidebar from "./Sidebar";
+import Visualizer from "./Visualizer";
 
 // The import statement is for the webpack to know the dependence on
 // external js/css files and to add them to the compiled output.
@@ -58,9 +59,10 @@ class Model extends React.Component {
         this.selectLayer = this.selectLayer.bind(this);
         this.updateModelsList = this.updateModelsList.bind(this);
         this.queryPixel = this.queryPixel.bind(this);
+        this.fetchLayerMaps = this.fetchLayerMaps.bind(this);
     }
 
-    fetchImgBlobKey(run, tag, sample){
+    fetchImgBlobKey(run, tag, sample, callback){
         // Returns a promise!
         var url = `http://localhost:6006/data/plugin/vit_inspect/images?run=${run}&tag=${tag}&sample=${sample}`;
         const blob_key = fetch(url)
@@ -81,6 +83,16 @@ class Model extends React.Component {
                 // Get the first and only sample, that is our image.
                 return data[0].blob_key;
             })
+            .then((blob_key) => {
+                /*
+                    Callback to parent to pass the message that we are done
+                    fetching, and move on, without waiting for callback to
+                    return.
+                */
+                //TODO: Is this callback async? It should be!
+                callback();
+                return blob_key;
+            })
             .catch((error) => {
                 console.log(`Could not get image: \n\t${url}`);
                 return null;
@@ -88,7 +100,7 @@ class Model extends React.Component {
         return blob_key;
     }
 
-    fetchLayerMaps(model, layer){
+    fetchLayerMaps(model, layer, callback){
         // returns a Promise!
         // Fetches attention maps for the requested layer.
         var cmp = this;
@@ -106,8 +118,9 @@ class Model extends React.Component {
                 layer_maps.push(cmp.fetchImgBlobKey(
                     model.run,
                     `${model.tag}l${layer}`,
-                    head * total_tokens + token
-                ))
+                    head * total_tokens + token,
+                    callback
+                ));
             }
         }
         return Promise.all(layer_maps);
@@ -122,6 +135,7 @@ class Model extends React.Component {
 
         // Get model's run and tag:
         var model = cmp.state.models_arr[model_id];
+        /*
         // Load asynchronously the batch image and the attention maps
         // keys:
         const batch_blob_key = await cmp.fetchImgBlobKey(
@@ -140,6 +154,11 @@ class Model extends React.Component {
         // Update the model state with the selected model's params:
         model.batch_blob_key = batch_blob_key;
         model.attn_blob_key_arr = attn_blob_key_arr;
+
+         */
+        model.batch_blob_key = "";
+        model.attn_blob_key_arr = [];
+
         cmp.setState({
             model: model
             //model_id: model_id,
@@ -158,14 +177,15 @@ class Model extends React.Component {
         // state updates (are these a thing??).
         var cmp = this;
 
+        /*
         // First load the layer attention maps:
         // Call method that loads selected layer's blobs.
         var attn_blob_key_arr = cmp.state.model.attn_blob_key_arr;
+        Fetching delegated on layer query component
         // Impromptu caching: if blobs already loaded, do not load them again!
         if (attn_blob_key_arr[layer_id].length == 0){
             attn_blob_key_arr[layer_id] = await cmp.fetchLayerMaps(cmp.state.model, layer_id);
         }
-
         // Then update the state of the model. We need to wait until
         // everything is ready to update the Model, because the visualizer
         // will re-render.
@@ -175,13 +195,16 @@ class Model extends React.Component {
         },() => {
             console.log(`Layer has loaded: ${layer_id}`);
         });
+
+         */
+
     }
 
     updateModel(state_update) {
         var cmp = this;
         // Passes the child state (on update) to this component.
         cmp.setState(state_update);
-        cmp.forceUpdate();
+        //cmp.forceUpdate();
     }
 
     fetchRunsTags() {
@@ -277,7 +300,7 @@ class Model extends React.Component {
                         queryPixel={this.queryPixel}
                         up={this.updateModel}
                     />
-                    <WeightsImgGrid
+                    <Visualizer
                         model={this.state.model}
                         //TODO: If I update only this will the whole model
                         // and affected components be updated?
@@ -293,116 +316,7 @@ class Model extends React.Component {
 }
 
 
-class WeightsImg extends React.Component{
-    constructor(props) {
-        super(props);
-        //TODO: I'm not sure I want two image elements here...
-        var img = new Image();
-        //TODO: This way src will be updated only the first time its
-        // constructed? What about when a different model loads? Will be
-        // called again? Since it gets created again, yes.
-        img.src = this.props.src;
-        //img.setAttribute("class", "img-thumbnail");
-        this.state = {
-            img: img
-        };
-    }
-    componentDidMount() {
 
-    }
-
-    render(){
-        return (
-            <>
-                <div className="" id="weights-img"
-                     style={{gridArea: `${this.props.layer} ${this.props.head} 
-                 ${this.props.layer} ${this.props.head}`}}
-                >
-                    <img className={"img-thumbnail"} src={this.state.img.src}/>
-                </div>
-            </>
-        );
-    }
-}
-
-class WeightsImgGrid extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-        };
-    }
-
-    makeGridStyle() {
-        // Generate the styles to be used in grid:
-        return {
-            display: "grid",
-            gridTemplateRows: "repeat("+this.props.model.params.num_layers+", 1fr)",
-            gridTemplateColumns: "repeat("+this.props.model.params.num_heads+", 1fr)"
-        };
-    }
-
-    makeImgUrl(wid) {
-        var attnw_arr = this.props.model.attn_blob_key_arr;
-        return `individualImage?blob_key=${attnw_arr[wid]}}`;
-    }
-
-    Grid () {
-        // Array of React Components:
-        var grid = [];
-        var num_layers = this.props.model.params.num_layers;
-        var num_heads = this.props.model.params.num_heads;
-        var total_tokens = Math.pow(this.props.model.params.len_in_patches, 2);
-        var selected_layer = this.props.selected_layer;
-        var selected_token = this.props.selected_token;
-        var start_layer = selected_layer;
-        var end_layer = selected_layer + 1;
-        // Handle user showing all layers:
-        if (selected_layer < 0){
-           start_layer = 0;
-           end_layer = num_layers;
-        }
-        //TODO: !!!
-        //var src = this.props.model.params.attn_blob_key_arr[0];
-        if ((typeof num_layers == 'undefined') || (typeof num_heads == 'undefined')){
-            return <></>;
-        }
-
-        //TODO: this should render as a grid only if user selects to show
-        // all layers. Else should render as a line.
-        for (let l=start_layer; l < end_layer; l++) {
-            for (let h=0; h < num_heads; h++) {
-                // Get the weight mat id:
-                // TODO: adapt to the selection of a single layer
-                //var wid = (l*num_heads+h) * total_tokens + selected_token;
-                //TODO: you should fetchLayerMaps() again, since we are
-                // changing layer!
-                var wid = h * total_tokens + selected_token;
-                grid.push(
-                    <WeightsImg
-                        key={wid}
-                        layer={l}
-                        head={h}
-                        src={this.makeImgUrl(wid)}
-                    />
-                );
-            }
-        }
-        return grid;
-    };
-
-    render() {
-        return (
-            <div className="container-fluid">
-                <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
-                     id={"visualization"}>
-                    <div style={this.makeGridStyle()}>
-                        {this.Grid()}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-}
 
 
 export default Model;
