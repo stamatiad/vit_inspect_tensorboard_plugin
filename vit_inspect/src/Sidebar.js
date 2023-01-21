@@ -51,6 +51,7 @@ class Sidebar extends React.Component {
                 <ModelSelector
                     vi_params={this.props.vi_params}
                     selectModel={this.props.selectModel}
+                    fetchImgBlobKey={this.props.fetchImgBlobKey}
                     up={this.props.up}
                 />
                 <LayerQuery

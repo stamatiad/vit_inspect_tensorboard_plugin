@@ -70,6 +70,9 @@ class Visualizer extends React.Component {
     render() {
         return (
             <div className="container-fluid">
+                <div className={"row"}>
+                    <p className={"fs-5"}>Layer: </p>
+                </div>
                 <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
                      id={"visualization"}>
                     <div style={this.makeGridStyle()}>

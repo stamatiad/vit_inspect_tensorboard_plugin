@@ -141,34 +141,9 @@ class Model extends React.Component {
     async selectModel(model_id) {
         // This will begin fetching the tag's metadata.
         var cmp = this;
-        // Inform the Tags List that this is the active tag that we inspect:
-        //this.props.click(this.props.run, this.props.tag, this.props.id,
-        // this.props.obj);
 
         // Get model's run and tag:
         var model = cmp.state.vi_params.models_arr[model_id];
-        /*
-        // Load asynchronously the batch image and the attention maps
-        // keys:
-        const batch_blob_key = await cmp.fetchImgBlobKey(
-            model.run, model.tag, 0
-        );
-        var attn_blob_key_arr = [];
-        //const attn_blob_key_arr = await cmp.fetchLayerMaps(model);
-        //TODO: Make this saving into an 2d array, maintaining blobs for
-        // each layer:
-        for (var i = 0; i < model.params.num_layers; i++){
-            attn_blob_key_arr.push([]);
-        }
-        //Call method that loads more layer blobs. Load layer 0 for starters.
-        attn_blob_key_arr[0] = await cmp.fetchLayerMaps(model, 0);
-
-        // Update the model state with the selected model's params:
-        model.batch_blob_key = batch_blob_key;
-        model.attn_blob_key_arr = attn_blob_key_arr;
-        model.batch_blob_key = "";
-        model.attn_blob_key_arr = [];
-         */
 
         cmp.setState({
             model: model
@@ -187,18 +162,6 @@ class Model extends React.Component {
         // This function should reside in the main Model, so to avoid cyclic
         // state updates (are these a thing??).
         var cmp = this;
-
-        /*
-        // First load the layer attention maps:
-        // Call method that loads selected layer's blobs.
-        var attn_blob_key_arr = cmp.state.model.attn_blob_key_arr;
-        Fetching delegated on layer query component
-        // Impromptu caching: if blobs already loaded, do not load them again!
-        if (attn_blob_key_arr[layer_id].length == 0){
-            attn_blob_key_arr[layer_id] = await cmp.fetchLayerMaps(cmp.state.model, layer_id);
-        }
-         */
-
 
         // Then update the state of the model. We need to wait until
         // everything is ready to update the Model, because the visualizer

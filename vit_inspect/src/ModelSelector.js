@@ -64,6 +64,7 @@ class ModelSelector extends React.Component {
                     key={i}
                     model={model}
                     selectModel={cmp.props.selectModel}
+                    fetchImgBlobKey={this.props.fetchImgBlobKey}
                 />
             );
         }
