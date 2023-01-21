@@ -27,7 +27,22 @@ class Model extends React.Component {
          */
         this.state = {
             // These are the model props that are used by all child components:
-            models_arr: [],
+            vi_params: {
+                models_arr: [],
+                /* These are used by the visualizer to render the appropriate
+                   maps. So, update their state when everything is ready to be
+                   visualized in the main window.
+                   These are tricky params, because on every layer load will
+                    cause every child to re-render. So each child that should
+                     take responsibility and check if should re-render.
+                 */
+                selected_layer: 0,
+                selected_token: 0,
+                // The batch and attn maps image metadata. Every component
+                // should save any updated state here, and load from here.
+                batch_blob_key: "",
+                attn_blob_key_arr: [],
+            },
             // THE MODEL OBJ GETS OVERWITTEN when the TB loads the model
             // from TF!
             // These values are just to create the state structure! DO NOT
@@ -38,28 +53,25 @@ class Model extends React.Component {
                     num_heads: undefined,
                     len_in_patches: undefined,
                 },
-                // The batch and attn maps image metadata:
-                batch_blob_key: "",
-                attn_blob_key_arr: [],
-                // Although not directly model's properties, we keep them
-                // here, so we need to pass only the model as React prop around.
             },
-            /* These are used by the visualizer to render the appropriate
-               maps. So, update their state when everything is ready to be
-               visualized in the main window.
-               These are tricky params, because on every layer load will
-                cause every child to re-render. So each child that should
-                 take responsibility and check if should re-render.
-             */
-            selected_layer: 0,
-            selected_token: 0,
         };
         this.selectModel = this.selectModel.bind(this);
         this.updateModel = this.updateModel.bind(this);
-        this.selectLayer = this.selectLayer.bind(this);
+        this.selectLayerAsync = this.selectLayerAsync.bind(this);
         this.updateModelsList = this.updateModelsList.bind(this);
         this.queryPixel = this.queryPixel.bind(this);
         this.fetchLayerMaps = this.fetchLayerMaps.bind(this);
+    }
+
+    //==========================================================================
+    // Component functions
+    //==========================================================================
+
+    setStateAsync = (newState) => {
+        /*
+        Use promisified state set in order to chain thens.
+        */
+        return new Promise((resolve) => this.setState(newState, resolve));
     }
 
     fetchImgBlobKey(run, tag, sample, callback){
@@ -134,7 +146,7 @@ class Model extends React.Component {
         // this.props.obj);
 
         // Get model's run and tag:
-        var model = cmp.state.models_arr[model_id];
+        var model = cmp.state.vi_params.models_arr[model_id];
         /*
         // Load asynchronously the batch image and the attention maps
         // keys:
@@ -154,10 +166,9 @@ class Model extends React.Component {
         // Update the model state with the selected model's params:
         model.batch_blob_key = batch_blob_key;
         model.attn_blob_key_arr = attn_blob_key_arr;
-
-         */
         model.batch_blob_key = "";
         model.attn_blob_key_arr = [];
+         */
 
         cmp.setState({
             model: model
@@ -167,12 +178,12 @@ class Model extends React.Component {
         },() => {
             console.log(`MODEL LOADED:
                 run: ${cmp.state.model.run}, 
-                tag: ${cmp.state.model.tag}, 
-                blob key: ${cmp.state.model.batch_blob_key}`);
+                tag: ${cmp.state.model.tag}`);
+                //blob key: ${cmp.state.model.batch_blob_key}`);
         });
     }
 
-    async selectLayer(layer_id) {
+    async selectLayerAsync(layer_id, attn_arr) {
         // This function should reside in the main Model, so to avoid cyclic
         // state updates (are these a thing??).
         var cmp = this;
@@ -186,17 +197,25 @@ class Model extends React.Component {
         if (attn_blob_key_arr[layer_id].length == 0){
             attn_blob_key_arr[layer_id] = await cmp.fetchLayerMaps(cmp.state.model, layer_id);
         }
+         */
+
+
         // Then update the state of the model. We need to wait until
         // everything is ready to update the Model, because the visualizer
         // will re-render.
-        cmp.setState({
-            selected_layer: layer_id,
-            attn_blob_key_arr: attn_blob_key_arr
-        },() => {
-            console.log(`Layer has loaded: ${layer_id}`);
-        });
 
-         */
+        // TODO: since this is async, do here any initializations.
+        const attn_blob_key_arr = cmp.state.vi_params.attn_blob_key_arr;
+        attn_blob_key_arr[layer_id] = attn_arr;
+
+        return cmp.setStateAsync({
+            ...cmp.state,
+            vi_params: {
+                ...cmp.state.vi_params,
+                selected_layer: layer_id,
+                attn_blob_key_arr: attn_blob_key_arr
+            },
+        });
 
     }
 
@@ -263,20 +282,28 @@ class Model extends React.Component {
         // Update all relevant components:
         cmp.setState(
             {
-                models_arr: models_arr
+                ...cmp.state,
+                vi_params:{
+                    ...cmp.state.vi_params,
+                    models_arr: models_arr
+                }
             }
         )
     }
 
     queryPixel(i, j) {
         var cmp = this;
-        console.log(`Model has been notified. Pixel queried is ${i} ${j}`);
+        console.log(`Model has been updated. Pixel queried is ${i} ${j}`);
         // TODO: rename to len_in_tokens. Use tokens from now on. No need to
         //  use pixels, since there is no reference to pixels anywhere.
         var len_in_patches = cmp.state.model.params.len_in_patches;
         // Update the Visualizer with the new data
         cmp.setState({
-            selected_token: i * len_in_patches + j
+            ...cmp.state,
+            vi_params: {
+                ...cmp.state.vi_params,
+                selected_token: i * len_in_patches + j
+            }
         });
     }
 
@@ -290,11 +317,11 @@ class Model extends React.Component {
             <div className="App">
                 <main>
                     <Sidebar
-                        models_arr={this.state.models_arr}
+                        vi_params={this.state.vi_params}
                         //len_in_patches={this.state.model.params.len_in_patches}
                         model={this.state.model}
                         selectModel={this.selectModel}
-                        selectLayer={this.selectLayer}
+                        selectLayerAsync={this.selectLayerAsync}
                         fetchImgBlobKey={this.fetchImgBlobKey}
                         fetchLayerMaps={this.fetchLayerMaps}
                         queryPixel={this.queryPixel}
@@ -302,11 +329,11 @@ class Model extends React.Component {
                     />
                     <Visualizer
                         model={this.state.model}
+                        vi_params={this.state.vi_params}
                         //TODO: If I update only this will the whole model
                         // and affected components be updated?
-                        selected_layer={this.state.selected_layer}
-                        selected_token={this.state.selected_token}
-                        //heads={this.state.model.params.num_heads}
+                        selected_layer={this.state.vi_params.selected_layer}
+                        selected_token={this.state.vi_params.selected_token}
                         up={this.updateParent}
                     />
                 </main>

@@ -10,6 +10,9 @@ class ModelItem extends React.Component {
     }
 
     click = () => {
+        console.log(`@ModelItem: User selected model
+        run:${this.props.model.run}
+        tag:${this.props.model.tag}`);
         this.props.selectModel(this.props.model.id);
     }
 

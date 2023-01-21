@@ -4,7 +4,7 @@ class GridCell extends React.Component {
     constructor(props) {
         super(props);
         this.state= {
-            class_style: ""
+            class_style: (props.selected ? "border border-primary shadow" : "")
         };
     }
 
@@ -13,6 +13,10 @@ class GridCell extends React.Component {
     click = () => {
         this.props.select(this.props.i, this.props.j);
     }
+
+    /* Component maintains local control if its hovered uppon. Yet the
+     selected state is kept by the parent PixelQuery.
+     */
     over = () => {
         this.setState({class_style: "border border-danger shadow"})
     }
@@ -20,13 +24,24 @@ class GridCell extends React.Component {
         this.setState({class_style: ""})
     }
 
+    setClassStyle() {
+        if (this.props.selected){
+            return "border border-primary shadow";
+        } else {
+            return this.state.class_style;
+        }
+    }
+
     render() {
+
+        console.log(`rendering GridCell i${this.props.i} j${this.props.j}, str:${this.class_style}`);
+
         return (
             <div
                 onClick={this.click}
                 onMouseOver={this.over}
                 onMouseOut={this.out}
-                className={this.state.class_style}
+                className={this.setClassStyle()}
                 style={
                     {gridArea: `${this.props.i} ${this.props.j} ${this.props.i} ${this.props.j}`
                     }
@@ -35,6 +50,7 @@ class GridCell extends React.Component {
         );
     }
 }
+
 class PixelQuery extends React.Component {
     constructor(props) {
         super(props);
@@ -119,7 +135,8 @@ class PixelQuery extends React.Component {
             cmp.props.model.run, cmp.props.model.tag, 0, ()=>{}
         );
         cmp.setState(
-        {
+       {
+                ...cmp.state,
                 batch_blob_key: batch_blob_key,
                 batch_img_url: `individualImage?blob_key=${batch_blob_key}`
             }
@@ -128,11 +145,14 @@ class PixelQuery extends React.Component {
 
     selectQueryPixel(i, j) {
         var cmp = this;
-        //console.log(`Query pixel is ${i} ${j}`);
+        console.log(`PixelQuery.selectQueryPixel called ${i} ${j}`);
         // Update local state:
         this.setState({
+            ...cmp.state,
             qi: i,
             qj: j
+        },()=>{
+            cmp.forceUpdate();
         });
         // Notify selected model.
         cmp.props.queryPixel(i, j);
@@ -159,11 +179,14 @@ class PixelQuery extends React.Component {
 
         for (let i=0; i < len_in_patches; i++) {
             for (let j=0; j < len_in_patches; j++) {
+                var selected = (this.state.qi == i && this.state.qj == j ? true : false);
+                console.log(`i${i}, j${j}, s${selected}`);
                 grid.push(
                     <GridCell
                         key={i*len_in_patches+j}
                         i={i}
                         j={j}
+                        selected={selected}
                         select={this.selectQueryPixel}
                     />
                 );

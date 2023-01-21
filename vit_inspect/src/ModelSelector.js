@@ -58,7 +58,7 @@ class ModelSelector extends React.Component {
         var cmp = this;
         var model_list = [];
         // TODO: model.id and key should be the same. Should I assert this??
-        for (const [i, model] of Object.entries(cmp.props.models_arr)) {
+        for (const [i, model] of Object.entries(cmp.props.vi_params.models_arr)) {
             model_list.push(
                 <ModelItem
                     key={i}

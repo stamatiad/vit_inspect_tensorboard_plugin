@@ -3,8 +3,6 @@ import React from "react";
 class Visualizer extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-        };
     }
 
     makeGridStyle() {
@@ -16,9 +14,13 @@ class Visualizer extends React.Component {
         };
     }
 
-    makeImgUrl(wid) {
-        var attnw_arr = this.props.model.attn_blob_key_arr;
-        return `individualImage?blob_key=${attnw_arr[wid]}}`;
+    makeImgUrl(selected_layer, wid) {
+        var attnw_arr = this.props.vi_params.attn_blob_key_arr;
+        if (attnw_arr.length == 0){
+            return "";
+        } else {
+            return `individualImage?blob_key=${attnw_arr[selected_layer][wid]}}`;
+        }
     }
 
     Grid () {
@@ -27,8 +29,8 @@ class Visualizer extends React.Component {
         var num_layers = this.props.model.params.num_layers;
         var num_heads = this.props.model.params.num_heads;
         var total_tokens = Math.pow(this.props.model.params.len_in_patches, 2);
-        var selected_layer = this.props.selected_layer;
-        var selected_token = this.props.selected_token;
+        var selected_layer = this.props.vi_params.selected_layer;
+        var selected_token = this.props.vi_params.selected_token;
         var start_layer = selected_layer;
         var end_layer = selected_layer + 1;
         // Handle user showing all layers:
@@ -57,7 +59,7 @@ class Visualizer extends React.Component {
                         key={wid}
                         layer={l}
                         head={h}
-                        src={this.makeImgUrl(wid)}
+                        src={this.makeImgUrl(l, wid)}
                     />
                 );
             }
@@ -82,16 +84,6 @@ class Visualizer extends React.Component {
 class WeightsImg extends React.Component{
     constructor(props) {
         super(props);
-        //TODO: I'm not sure I want two image elements here...
-        var img = new Image();
-        //TODO: This way src will be updated only the first time its
-        // constructed? What about when a different model loads? Will be
-        // called again? Since it gets created again, yes.
-        img.src = this.props.src;
-        //img.setAttribute("class", "img-thumbnail");
-        this.state = {
-            img: img
-        };
     }
     componentDidMount() {
 
@@ -104,7 +96,7 @@ class WeightsImg extends React.Component{
                      style={{gridArea: `${this.props.layer} ${this.props.head} 
                  ${this.props.layer} ${this.props.head}`}}
                 >
-                    <img className={"img-thumbnail"} src={this.state.img.src}/>
+                    <img className={"img-thumbnail"} src={this.props.src}/>
                 </div>
             </>
         );

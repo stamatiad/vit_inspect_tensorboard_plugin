@@ -49,13 +49,13 @@ class Sidebar extends React.Component {
                 </div>
                 <hr/>
                 <ModelSelector
-                    models_arr={this.props.models_arr}
+                    vi_params={this.props.vi_params}
                     selectModel={this.props.selectModel}
                     up={this.props.up}
                 />
                 <LayerQuery
                     model={this.props.model}
-                    selectLayer={this.props.selectLayer}
+                    selectLayerAsync={this.props.selectLayerAsync}
                     fetchLayerMaps={this.props.fetchLayerMaps}
                     up={this.props.up}
                 />

@@ -6,7 +6,7 @@ class LayerQuery extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selected_layer: 0,
+            selected_layer: -1,
             // The progress related state, will re-render the progress
             // button component, yet not this component.
             progress_percentage: 0,
@@ -93,6 +93,13 @@ class LayerQuery extends React.Component {
     // Component functions
     //==========================================================================
 
+    setStateAsync = (newState) => {
+        /*
+        Use promisified state set in order to chain thens.
+        */
+        return new Promise((resolve) => this.setState(newState, resolve));
+    }
+
     updateProgress(percent) {
         /*
         Update the style of the progres bar, without re-rendering the whole
@@ -141,41 +148,65 @@ class LayerQuery extends React.Component {
         }
     }
 
-    async fetchLayerBlobKeys() {
+    fetchLayerBlobKeysAsync() {
         var cmp = this;
         // Load asynchronously the layers maps, by calling the Model's fetch:
         // IMPORTANT: initialize the counters:
         cmp.requestCounter = 0;
         cmp.prev_percent = 0;
 
-        // TODO: since this is async, do here any initializations.
-        const attn_blob_key_arr = cmp.props.model.attn_blob_key_arr;
-        attn_blob_key_arr[this.state.selected_layer] = await cmp.props.fetchLayerMaps(
+
+        //TODO: rename to async to make explicit that it returns a promise.
+        return cmp.props.fetchLayerMaps(
             cmp.props.model, cmp.state.selected_layer, cmp.fetchLayerBlobKeysCallback
         );
-        // Loading layer completed
-        this.setState({
-            progress_percentage: 100,
-            progress_label: `Layer ${this.state.selected_layer}.`
-        }, ()=>{
-            console.log(`Layer ${this.state.selected_layer} loaded!`);
-        });
+
     }
 
     selectLayer = (layer_id) => {
         var cmp = this;
+        if (this.state.selected_layer == layer_id){
+            return;
+        }
+
         // intercept layer selection to update local state:
+        cmp.setStateAsync({
+            selected_layer: layer_id
+        })
+        .then(()=>{
+            return cmp.fetchLayerBlobKeysAsync();
+        })
+        .then((attn_arr)=>{
+            //inform parent Model:
+            return cmp.props.selectLayerAsync(
+                layer_id,
+                attn_arr
+            );
+        })
+        .then(()=>{
+            // Loading layer completed
+            cmp.setState({
+                progress_percentage: 100,
+                progress_label: `Layer ${cmp.state.selected_layer}.`
+            }, ()=>{
+                console.log(`Layer ${cmp.state.selected_layer} loaded!`);
+            });
+        });
+
+        /*
         cmp.setState({
             selected_layer: layer_id
         }, ()=>{
             //TODO: load the layer blobs, displaying progress in the way. Then
             // pass the updated blobs to the Model component. Then cause the
             // Visualizer to re-render, displaying the attention maps.
-            cmp.fetchLayerBlobKeys();
+            cmp.fetchLayerBlobKeysAsync();
 
             //inform parent Model:
             cmp.props.selectLayer(layer_id);
         });
+
+         */
     }
 
 
