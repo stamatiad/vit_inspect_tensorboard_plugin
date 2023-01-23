@@ -34,7 +34,8 @@ class GridCell extends React.Component {
 
     render() {
 
-        console.log(`rendering GridCell i${this.props.i} j${this.props.j}, str:${this.class_style}`);
+        //console.log(`rendering GridCell i${this.props.i} j${this.props.j},
+        // str:${this.class_style}`);
 
         return (
             <div
@@ -84,7 +85,6 @@ class PixelQuery extends React.Component {
         // have the same padding!
         return (
             <div>
-                <span className="fs-5">Pixel Query</span>
                 <div className="pixelq-img" id="weights-img">
                     <img className="img-thumbnail" src={this.state.batch_img_url}
                          style={{padding: "0.25rem"}}/>
@@ -131,7 +131,7 @@ class PixelQuery extends React.Component {
     async fetchBatchBlobKey() {
         var cmp = this;
         // Load asynchronously the batch image, by calling the Model's fetch:
-        const batch_blob_key = await cmp.props.fetchImgBlobKey(
+        const batch_blob_key = await cmp.props.pf.fetchImgBlobKey(
             cmp.props.model.run, cmp.props.model.tag, 0, ()=>{}
         );
         cmp.setState(
@@ -155,7 +155,7 @@ class PixelQuery extends React.Component {
             cmp.forceUpdate();
         });
         // Notify selected model.
-        cmp.props.queryPixel(i, j);
+        cmp.props.pf.queryPixel(i, j);
 
     }
 
@@ -180,7 +180,7 @@ class PixelQuery extends React.Component {
         for (let i=0; i < len_in_patches; i++) {
             for (let j=0; j < len_in_patches; j++) {
                 var selected = (this.state.qi == i && this.state.qj == j ? true : false);
-                console.log(`i${i}, j${j}, s${selected}`);
+                //console.log(`i${i}, j${j}, s${selected}`);
                 grid.push(
                     <GridCell
                         key={i*len_in_patches+j}

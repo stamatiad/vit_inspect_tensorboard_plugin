@@ -63,8 +63,7 @@ class ModelSelector extends React.Component {
                 <ModelItem
                     key={i}
                     model={model}
-                    selectModel={cmp.props.selectModel}
-                    fetchImgBlobKey={this.props.fetchImgBlobKey}
+                    pf={this.props.pf}
                 />
             );
         }

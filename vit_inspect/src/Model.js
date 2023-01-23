@@ -55,13 +55,231 @@ class Model extends React.Component {
                 },
             },
         };
-        this.selectModel = this.selectModel.bind(this);
-        this.updateModel = this.updateModel.bind(this);
-        this.selectLayerAsync = this.selectLayerAsync.bind(this);
+        /*
+        Props functions. Pass them to child components, in an object to
+         avoid renaming them in all intermediate components.
+        */
+        this.pf = {
+            fetchImgBlobKey(run, tag, sample, callback) {
+                // Returns a promise!
+                var url = `http://localhost:6006/data/plugin/vit_inspect/images?run=${run}&tag=${tag}&sample=${sample}`;
+                const blob_key = fetch(url)
+                    .then((response) => {
+                        //TODO: how do you handlee/notice this error?
+                        if (!response.ok) {
+                            throw new Error(
+                                `HTTP error: ${response.status}\n\tFailed to fetch image from:\n\t${url}`
+                            );
+                        }
+                        console.log("IMAGE FETCHED SUCCESSFULLY!")
+                        return response;
+                    })
+                    .then((response) => {
+                        return response.json();
+                    })
+                    .then((data) => {
+                        // Get the first and only sample, that is our image.
+                        return data[0].blob_key;
+                    })
+                    .then((blob_key) => {
+                        /*
+                            Callback to parent to pass the message that we are done
+                            fetching, and move on, without waiting for callback to
+                            return.
+                        */
+                        //TODO: Is this callback async? It should be!
+                        callback();
+                        return blob_key;
+                    })
+                    .catch((error) => {
+                        console.log(`Could not get image: \n\t${url}`);
+                        return null;
+                    });
+                return blob_key;
+            },
+
+            fetchLayerBlobKeys(run, tag, layer, callback) {
+                // Returns a promise!
+                var url = `http://localhost:6006/data/plugin/vit_inspect/layers?run=${run}&tag=${tag}&layer=${layer}`;
+                const blob_keys = fetch(url)
+                    .then((response) => {
+                        //TODO: how do you handlee/notice this error?
+                        if (!response.ok) {
+                            throw new Error(
+                                `HTTP error: ${response.status}\n\tFailed to fetch image from:\n\t${url}`
+                            );
+                        }
+                        console.log("IMAGE FETCHED SUCCESSFULLY!")
+                        return response;
+                    })
+                    .then((response) => {
+                        return response.json();
+                    })
+                    .then((data) => {
+                        // Get the first and only sample, that is our image.
+                        // TODO: WHY only the first sample? HANDLE multiple cases!
+                        return data.blob_keys;
+                    })
+                    .then((blob_keys) => {
+                        /*
+                            Callback to parent to pass the message that we are done
+                            fetching, and move on, without waiting for callback to
+                            return.
+                        */
+                        //TODO: Is this callback async? It should be!
+                        callback();
+                        return blob_keys;
+                    })
+                    .catch((error) => {
+                        console.log(`Could not get layer: \n\t${url}`);
+                        return null;
+                    });
+                return blob_keys;
+            },
+
+            async fetchLayerMapsAsync(model, callback) {
+                // returns a Promise!
+                // Fetches attention maps for the requested layer.
+                var cmp = this;
+                const layer_maps = [];
+                // SOS: We name differently the batch tags and the per layer tags!
+                // E.g the 'b0' is the whole batch tag and the 'b0l2' is its layer 2
+                // attention maps. So we need to change the tag string in the request!
+                //TODO: Make sure that their load and save indexing is the same!!!
+                for (const layer of Array(model.params.num_layers).keys()) {
+                    layer_maps.push(cmp.pf.fetchLayerBlobKeys(
+                        model.run,
+                        `${model.tag}l${layer}`,
+                        layer,
+                        callback
+                    ));
+                }
+                return Promise.all(layer_maps);
+            },
+
+            async loadAttnMapsToModelAsync(attn_arr) {
+                var cmp = this;
+                return cmp.setStateAsync({
+                    ...cmp.state,
+                    vi_params: {
+                        ...cmp.state.vi_params,
+                        attn_blob_key_arr: attn_arr
+                    },
+                });
+            },
+
+            async selectModelAsync(model_id) {
+                // This will begin fetching the tag's metadata.
+                var cmp = this;
+
+                // Get model's run and tag:
+                var model = cmp.state.vi_params.models_arr[model_id];
+
+                return cmp.setStateAsync({
+                    ...cmp.state,
+                    model: model
+                });
+            },
+
+            async selectLayerAsync(layer_id) {
+                // This function should reside in the main Model, so to avoid cyclic
+                // state updates (are these a thing??).
+                var cmp = this;
+
+                // Then update the state of the model. We need to wait until
+                // everything is ready to update the Model, because the visualizer
+                // will re-render.
+
+                return cmp.setStateAsync({
+                    ...cmp.state,
+                    vi_params: {
+                        ...cmp.state.vi_params,
+                        selected_layer: layer_id,
+                    },
+                });
+            },
+
+            fetchRunsTags() {
+                var url = "http://localhost:6006/data/plugin/vit_inspect/tags";
+                const raw_tags = fetch(url)
+                    .then((response) => {
+                        //TODO: how do you handlee/notice this error?
+                        if (!response.ok) {
+                            throw new Error(
+                                `HTTP error: ${response.status}\n\tFailed to fetch model tags from:\n\t${url}`
+                            );
+                        }
+                        return response;
+                    })
+                    .then((response) => {
+                        console.log("MODELS FETCHED SUCCESSFULLY!");
+                        return response.json();
+                    })
+                    .then((data) => {
+                        console.log("MODELS PARSED SUCCESSFULLY!");
+                        return data;
+                    })
+                    .catch((error) => {
+                        console.log(`Could not get tags: \n\t${url}`);
+                        return null;
+                    });
+
+                return raw_tags;
+            },
+
+            queryPixel(i, j) {
+                var cmp = this;
+                console.log(`Model has been updated. Pixel queried is ${i} ${j}`);
+                // TODO: rename to len_in_tokens. Use tokens from now on. No need to
+                //  use pixels, since there is no reference to pixels anywhere.
+                var len_in_patches = cmp.state.model.params.len_in_patches;
+                // Update the Visualizer with the new data
+                cmp.setState({
+                    ...cmp.state,
+                    vi_params: {
+                        ...cmp.state.vi_params,
+                        selected_token: i * len_in_patches + j
+                    }
+                });
+            }
+        };
+
         this.updateModelsList = this.updateModelsList.bind(this);
-        this.queryPixel = this.queryPixel.bind(this);
-        this.fetchLayerMaps = this.fetchLayerMaps.bind(this);
+
+        this.pf.selectModelAsync = this.pf.selectModelAsync.bind(this);
+        this.pf.selectLayerAsync = this.pf.selectLayerAsync.bind(this);
+        this.pf.fetchLayerMapsAsync = this.pf.fetchLayerMapsAsync.bind(this);
+        this.pf.loadAttnMapsToModelAsync = this.pf.loadAttnMapsToModelAsync.bind(this);
+        this.pf.queryPixel = this.pf.queryPixel.bind(this);
     }
+
+    componentDidMount() {
+        this.updateModelsList();
+    }
+
+    render() {
+        console.log(`Rendering MAIN`);
+        return (
+            <div className="App">
+                <main>
+                    <Sidebar
+                        vi_params={this.state.vi_params}
+                        //len_in_patches={this.state.model.params.len_in_patches}
+                        model={this.state.model}
+                        pf={this.pf}
+                    />
+                    <Visualizer
+                        model={this.state.model}
+                        vi_params={this.state.vi_params}
+                        //TODO: If I update only this will the whole model
+                        // and affected components be updated?
+                        selected_layer={this.state.vi_params.selected_layer}
+                        selected_token={this.state.vi_params.selected_token}
+                    />
+                </main>
+            </div>
+        );
+    };
 
     //==========================================================================
     // Component functions
@@ -74,154 +292,11 @@ class Model extends React.Component {
         return new Promise((resolve) => this.setState(newState, resolve));
     }
 
-    fetchImgBlobKey(run, tag, sample, callback){
-        // Returns a promise!
-        var url = `http://localhost:6006/data/plugin/vit_inspect/images?run=${run}&tag=${tag}&sample=${sample}`;
-        const blob_key = fetch(url)
-            .then((response) => {
-                //TODO: how do you handlee/notice this error?
-                if (!response.ok) {
-                    throw new Error(
-                        `HTTP error: ${response.status}\n\tFailed to fetch image from:\n\t${url}`
-                    );
-                }
-                console.log("IMAGE FETCHED SUCCESSFULLY!")
-                return response;
-            })
-            .then((response) => {
-                return response.json();
-            })
-            .then((data) => {
-                // Get the first and only sample, that is our image.
-                return data[0].blob_key;
-            })
-            .then((blob_key) => {
-                /*
-                    Callback to parent to pass the message that we are done
-                    fetching, and move on, without waiting for callback to
-                    return.
-                */
-                //TODO: Is this callback async? It should be!
-                callback();
-                return blob_key;
-            })
-            .catch((error) => {
-                console.log(`Could not get image: \n\t${url}`);
-                return null;
-            });
-        return blob_key;
-    }
-
-    fetchLayerMaps(model, layer, callback){
-        // returns a Promise!
-        // Fetches attention maps for the requested layer.
-        var cmp = this;
-        const layer_maps = [];
-        // SOS: We name differently the batch tags and the per layer tags!
-        // E.g the 'b0' is the whole batch tag and the 'b0l2' is its layer 2
-        // attention maps. So we need to change the tag string in the request!
-        var total_tokens = Math.pow(model.params.len_in_patches, 2);
-        //TODO: Make sure that their load and save indexing is the same!!!
-        //TODO: Just one active layer for now, because it takes so much time
-        // to load all of them (do the browser caches the previous layers or
-        // should I do this?):
-        for (const head of Array(model.params.num_heads).keys()) {
-            for (const token of Array(total_tokens).keys()) {
-                layer_maps.push(cmp.fetchImgBlobKey(
-                    model.run,
-                    `${model.tag}l${layer}`,
-                    head * total_tokens + token,
-                    callback
-                ));
-            }
-        }
-        return Promise.all(layer_maps);
-    }
-
-    async selectModel(model_id) {
-        // This will begin fetching the tag's metadata.
-        var cmp = this;
-
-        // Get model's run and tag:
-        var model = cmp.state.vi_params.models_arr[model_id];
-
-        cmp.setState({
-            model: model
-            //model_id: model_id,
-            //batch_blob_key: batch_blob_key,
-            //attn_blob_key_arr: attn_blob_key_arr
-        },() => {
-            console.log(`MODEL LOADED:
-                run: ${cmp.state.model.run}, 
-                tag: ${cmp.state.model.tag}`);
-                //blob key: ${cmp.state.model.batch_blob_key}`);
-        });
-    }
-
-    async selectLayerAsync(layer_id, attn_arr) {
-        // This function should reside in the main Model, so to avoid cyclic
-        // state updates (are these a thing??).
-        var cmp = this;
-
-        // Then update the state of the model. We need to wait until
-        // everything is ready to update the Model, because the visualizer
-        // will re-render.
-
-        // TODO: since this is async, do here any initializations.
-        const attn_blob_key_arr = cmp.state.vi_params.attn_blob_key_arr;
-        attn_blob_key_arr[layer_id] = attn_arr;
-
-        return cmp.setStateAsync({
-            ...cmp.state,
-            vi_params: {
-                ...cmp.state.vi_params,
-                selected_layer: layer_id,
-                attn_blob_key_arr: attn_blob_key_arr
-            },
-        });
-
-    }
-
-    updateModel(state_update) {
-        var cmp = this;
-        // Passes the child state (on update) to this component.
-        cmp.setState(state_update);
-        //cmp.forceUpdate();
-    }
-
-    fetchRunsTags() {
-        var url = "http://localhost:6006/data/plugin/vit_inspect/tags";
-        const raw_tags = fetch(url)
-            .then((response) => {
-                //TODO: how do you handlee/notice this error?
-                if (!response.ok) {
-                    throw new Error(
-                        `HTTP error: ${response.status}\n\tFailed to fetch model tags from:\n\t${url}`
-                    );
-                }
-                return response;
-            })
-            .then((response) => {
-                console.log("MODELS FETCHED SUCCESSFULLY!");
-                return response.json();
-            })
-            .then((data) => {
-                console.log("MODELS PARSED SUCCESSFULLY!");
-                return data;
-            })
-            .catch((error) => {
-                console.log(`Could not get tags: \n\t${url}`);
-                return null;
-            });
-
-        return raw_tags;
-    }
-
     async updateModelsList() {
         var cmp = this;
         var id = 0;
 
-        const raw_tags = await cmp.fetchRunsTags();
+        const raw_tags = await cmp.pf.fetchRunsTags();
         var models_arr = [];
         for (const [run, run_obj] of Object.entries(raw_tags)) {
             for (const [tag, tag_obj] of Object.entries(run_obj)) {
@@ -246,7 +321,7 @@ class Model extends React.Component {
         cmp.setState(
             {
                 ...cmp.state,
-                vi_params:{
+                vi_params: {
                     ...cmp.state.vi_params,
                     models_arr: models_arr
                 }
@@ -254,56 +329,9 @@ class Model extends React.Component {
         )
     }
 
-    queryPixel(i, j) {
-        var cmp = this;
-        console.log(`Model has been updated. Pixel queried is ${i} ${j}`);
-        // TODO: rename to len_in_tokens. Use tokens from now on. No need to
-        //  use pixels, since there is no reference to pixels anywhere.
-        var len_in_patches = cmp.state.model.params.len_in_patches;
-        // Update the Visualizer with the new data
-        cmp.setState({
-            ...cmp.state,
-            vi_params: {
-                ...cmp.state.vi_params,
-                selected_token: i * len_in_patches + j
-            }
-        });
-    }
 
-    componentDidMount() {
-        this.updateModelsList();
-    }
-
-    render(){
-        console.log(`Rendering MAIN`);
-        return (
-            <div className="App">
-                <main>
-                    <Sidebar
-                        vi_params={this.state.vi_params}
-                        //len_in_patches={this.state.model.params.len_in_patches}
-                        model={this.state.model}
-                        selectModel={this.selectModel}
-                        selectLayerAsync={this.selectLayerAsync}
-                        fetchImgBlobKey={this.fetchImgBlobKey}
-                        fetchLayerMaps={this.fetchLayerMaps}
-                        queryPixel={this.queryPixel}
-                        up={this.updateModel}
-                    />
-                    <Visualizer
-                        model={this.state.model}
-                        vi_params={this.state.vi_params}
-                        //TODO: If I update only this will the whole model
-                        // and affected components be updated?
-                        selected_layer={this.state.vi_params.selected_layer}
-                        selected_token={this.state.vi_params.selected_token}
-                        up={this.updateParent}
-                    />
-                </main>
-            </div>
-        );
-    };
 }
+
 
 
 

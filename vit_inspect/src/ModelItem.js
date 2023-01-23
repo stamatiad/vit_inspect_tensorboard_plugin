@@ -8,6 +8,7 @@ class ModelItem extends React.Component {
         this.state = {
         };
         this.fetchBatchBlobKey = this.fetchBatchBlobKey.bind(this);
+        this.click = this.click.bind(this);
     }
 
 
@@ -75,17 +76,64 @@ class ModelItem extends React.Component {
     // Component functions
     //==========================================================================
 
-    click = () => {
+    fetchLayerBlobKeysCallback() {
+        console.log("CALLBACK");
+    }
+
+    fetchLayersBlobKeysAsync() {
+        var cmp = this;
+        // Load asynchronously the layers maps, by calling the Model's fetch:
+        // IMPORTANT: initialize the counters:
+        cmp.requestCounter = 0;
+        cmp.prev_percent = 0;
+
+        //TODO: rename to async to make explicit that it returns a promise.
+        return cmp.props.pf.fetchLayerMapsAsync(
+            cmp.props.model, cmp.fetchLayerBlobKeysCallback
+        );
+
+    }
+
+    click() {
+        var cmp = this;
         console.log(`@ModelItem: User selected model
             run:${this.props.model.run}
             tag:${this.props.model.tag}`);
-        this.props.selectModel(this.props.model.id);
+        // TODO: something like this!
+        // intercept layer selection to update local state:
+        // TODO:update the model fitst, so everything refers to the
+        //  proper model object.
+        //  this.props.selectModel(this.props.model.id);
+        cmp.props.pf.selectModelAsync(cmp.props.model.id)
+            .then(()=>{
+                console.log(`MODEL LOADED:
+                run: ${cmp.props.model.run}, 
+                tag: ${cmp.props.model.tag}`);
+                // Returns promise array with elements the blob keys of each layer.
+                return cmp.fetchLayersBlobKeysAsync();
+            })
+            .then((attn_arr)=>{
+                //inform parent Model:
+                return cmp.props.pf.loadAttnMapsToModelAsync(
+                    attn_arr
+                );
+            })
+            .then(()=>{
+                // Loading layer completed
+                cmp.setState({
+                    progress_percentage: 100,
+                    progress_label: `Layer ${cmp.state.selected_layer}.`
+                }, ()=>{
+                    console.log(`Layer ${cmp.state.selected_layer} loaded!`);
+                });
+            });
+
     }
 
     async fetchBatchBlobKey() {
         var cmp = this;
         // Load asynchronously the batch image, by calling the Model's fetch:
-        const batch_blob_key = await cmp.props.fetchImgBlobKey(
+        const batch_blob_key = await cmp.props.pf.fetchImgBlobKey(
             cmp.props.model.run, cmp.props.model.tag, 0, ()=>{}
         );
         cmp.setState(

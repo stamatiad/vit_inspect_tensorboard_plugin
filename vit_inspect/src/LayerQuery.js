@@ -136,11 +136,9 @@ class LayerQuery extends React.Component {
 
         cmp.requestCounter++;
 
-        const num_heads = cmp.props.model.params.num_heads;
-        const len_in_patches = cmp.props.model.params.len_in_patches;
-        const total_tokens = len_in_patches * len_in_patches;
-        const num_requests = total_tokens * num_heads;
-        var percent = Math.floor(100 * cmp.requestCounter / num_requests);
+        var percent = Math.floor(
+            100 * cmp.requestCounter / cmp.props.model.params.num_layers
+        );
         // Update the progress at each appropriate percentage:
         if (percent % 5 == 0 && cmp.prev_percent < percent){
             cmp.updateProgress(percent);
@@ -157,8 +155,8 @@ class LayerQuery extends React.Component {
 
 
         //TODO: rename to async to make explicit that it returns a promise.
-        return cmp.props.fetchLayerMaps(
-            cmp.props.model, cmp.state.selected_layer, cmp.fetchLayerBlobKeysCallback
+        return cmp.props.fetchLayerMapsAsync(
+            cmp.props.model, cmp.fetchLayerBlobKeysCallback
         );
 
     }
@@ -173,25 +171,21 @@ class LayerQuery extends React.Component {
         cmp.setStateAsync({
             selected_layer: layer_id
         })
-        .then(()=>{
-            return cmp.fetchLayerBlobKeysAsync();
-        })
-        .then((attn_arr)=>{
-            //inform parent Model:
-            return cmp.props.selectLayerAsync(
-                layer_id,
-                attn_arr
-            );
-        })
-        .then(()=>{
-            // Loading layer completed
-            cmp.setState({
-                progress_percentage: 100,
-                progress_label: `Layer ${cmp.state.selected_layer}.`
-            }, ()=>{
-                console.log(`Layer ${cmp.state.selected_layer} loaded!`);
+            .then(()=>{
+                // Inform the model about the layer selection:
+                cmp.props.pf.selectLayerAsync(layer_id);
+            })
+            .then(()=>{
+                // Loading layer completed
+                cmp.setStateAsync({
+                    ...cmp.state,
+                    progress_percentage: 100,
+                    progress_label: `Layer ${layer_id}.`
+                })
+            })
+            .then(()=>{
+                console.log(`Layer ${layer_id} loaded!`);
             });
-        });
 
         /*
         cmp.setState({
