@@ -130,6 +130,7 @@ class VitInspectPlugin(base_plugin.TBPlugin):
             "/main": self._serve_js,
             #"/main.css": self._serve_css,
             "/images": self._serve_image_metadata,
+            "/layers": self._serve_layer_metadata,
             "/individualImage": self._serve_individual_image,
             "/tags": self._serve_tags,
         }
@@ -223,6 +224,36 @@ class VitInspectPlugin(base_plugin.TBPlugin):
                 request, "Invalid run or tag", "text/plain", code=400
             )
         return http_util.Respond(request, response, "application/json")
+    @wrappers.Request.application
+
+    def _serve_layer_metadata(self, request):
+        """Given a tag and list of runs, serve a list of metadata for images.
+
+        Note that the images themselves are not sent; instead, we respond with URLs
+        to the images. The frontend should treat these URLs as opaque and should not
+        try to parse information about them or generate them itself, as the format
+        may change.
+
+        Args:
+          request: A werkzeug.wrappers.Request object.
+
+        Returns:
+          A werkzeug.Response application.
+        """
+        ctx = plugin_util.context(request.environ)
+        experiment = plugin_util.experiment_id(request.environ)
+        tag = request.args.get("tag")
+        run = request.args.get("run")
+        layer = int(request.args.get("layer", 0))
+        try:
+            response = self._layer_response_for_run(
+                ctx, experiment, run, tag, layer
+            )
+        except KeyError:
+            return http_util.Respond(
+                request, "Invalid run or tag", "text/plain", code=400
+            )
+        return http_util.Respond(request, response, "application/json")
 
     def _image_response_for_run(self, ctx, experiment, run, tag, sample):
         """Builds a JSON-serializable object with information about images.
@@ -264,6 +295,50 @@ class VitInspectPlugin(base_plugin.TBPlugin):
             for datum in images
             if len(datum.values) - 2 > sample
         ]
+
+    def _layer_response_for_run(self, ctx, experiment, run, tag, layer):
+        """Builds a JSON-serializable object with information about images.
+
+        Args:
+          run: The name of the run.
+          tag: The name of the tag the images all belong to.
+          sample: The zero-indexed sample of the image for which to retrieve
+            information. For instance, setting `sample` to `2` will fetch
+            information about only the third image of each batch. Steps with
+            fewer than three images will be omitted from the results.
+
+        Returns:
+          A list of dictionaries containing the wall time, step, and URL
+          for each image.
+
+        Raises:
+          KeyError, NotFoundError: If no image data exists for the given
+            parameters.
+        """
+        all_images = self.data_provider.read_blob_sequences(
+            ctx,
+            experiment_id=experiment,
+            plugin_name=self.plugin_name,
+            downsample=self.downsample_to,
+            run_tag_filter=provider.RunTagFilter(runs=[run], tags=[tag]),
+        )
+        images = all_images.get(run, {}).get(tag, None)
+
+        if images is None:
+            raise FileNotFoundError(
+                "No image data for run=%r, tag=%r" % (run, tag)
+            )
+        #TODO: handle multiple runs/tags with the same name!!!
+        response_obj = {}
+        for datum in images:
+            response_obj["wall_time"] = datum.wall_time
+            response_obj["step"] = datum.step
+            response_obj["blob_keys"] = [
+                img.blob_key
+                for img in datum.values[2:]
+            ]
+
+        return response_obj
 
     def _filter_by_sample(self, tensor_events, sample):
         return [
