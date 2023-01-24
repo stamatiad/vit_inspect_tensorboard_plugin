@@ -1,5 +1,4 @@
 import React from "react";
-import ButtonProgress from "./ButtonProgress";
 
 
 class LayerQuery extends React.Component {
@@ -46,10 +45,6 @@ class LayerQuery extends React.Component {
                     <button className="btn btn-outline-light dropdown-toggle"
                             type="button" id="layerDropdown"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                        <ButtonProgress
-                            progress_label={this.state.progress_label}
-                            progress_percentage={this.state.progress_percentage}
-                        />
                     </button>
                     <ul className="dropdown-menu"
                         aria-labelledby="layerDropdown">
@@ -105,20 +100,6 @@ class LayerQuery extends React.Component {
         Update the style of the progres bar, without re-rendering the whole
         component.
         */
-        /*
-        function newPercentage(percent) {
-            return {
-                width: `${percent}%`,
-                height: "100%",
-                position: "absolute",
-                top: "0",
-                left: "0"
-            }
-        };
-        // Update the style of the progress bar
-        this.progress.current.style = newPercentage(percent);
-
-         */
         this.setState({
             progress_percentage: percent,
             progress_label: `Loading Layer ${this.state.selected_layer}: ${this.state.progress_percentage}%.`
@@ -146,21 +127,6 @@ class LayerQuery extends React.Component {
         }
     }
 
-    fetchLayerBlobKeysAsync() {
-        var cmp = this;
-        // Load asynchronously the layers maps, by calling the Model's fetch:
-        // IMPORTANT: initialize the counters:
-        cmp.requestCounter = 0;
-        cmp.prev_percent = 0;
-
-
-        //TODO: rename to async to make explicit that it returns a promise.
-        return cmp.props.fetchLayerMapsAsync(
-            cmp.props.model, cmp.fetchLayerBlobKeysCallback
-        );
-
-    }
-
     selectLayer = (layer_id) => {
         var cmp = this;
         if (this.state.selected_layer == layer_id){
@@ -168,6 +134,7 @@ class LayerQuery extends React.Component {
         }
 
         // intercept layer selection to update local state:
+        let label_str = "";
         cmp.setStateAsync({
             selected_layer: layer_id
         })
@@ -177,30 +144,20 @@ class LayerQuery extends React.Component {
             })
             .then(()=>{
                 // Loading layer completed
+                if (layer_id < this.props.model.params.num_layers){
+                    label_str = `Layer ${layer_id}`;
+                } else {
+                    label_str = `All Layers`;
+                }
                 cmp.setStateAsync({
                     ...cmp.state,
                     progress_percentage: 100,
-                    progress_label: `Layer ${layer_id}.`
+                    progress_label: label_str
                 })
             })
             .then(()=>{
-                console.log(`Layer ${layer_id} loaded!`);
+                console.log(`${label_str} loaded!`);
             });
-
-        /*
-        cmp.setState({
-            selected_layer: layer_id
-        }, ()=>{
-            //TODO: load the layer blobs, displaying progress in the way. Then
-            // pass the updated blobs to the Model component. Then cause the
-            // Visualizer to re-render, displaying the attention maps.
-            cmp.fetchLayerBlobKeysAsync();
-
-            //inform parent Model:
-            cmp.props.selectLayer(layer_id);
-        });
-
-         */
     }
 
 
@@ -212,11 +169,12 @@ class LayerQuery extends React.Component {
             return <></>;
         }
 
-        for (let l=0; l < num_layers; l++) {
+        for (let l=0; l < num_layers + 1; l++) {
             list.push(
-                <Element
+                <Layer
                     key={l}
                     id={l}
+                    num_layers={num_layers}
                     click={this.selectLayer}
                 />
             );
@@ -227,7 +185,7 @@ class LayerQuery extends React.Component {
 
 }
 
-class Element extends React.Component{
+class Layer extends React.Component{
     constructor(props) {
         super(props);
         this.state = {};
@@ -237,6 +195,14 @@ class Element extends React.Component{
         this.props.click(this.props.id)
     }
 
+    layerName() {
+        if (this.props.id < this.props.num_layers) {
+            return `Layer ${this.props.id} + 1`;
+        } else {
+            return "All Layers";
+        }
+    }
+
     render() {
         return (
             <li>
@@ -244,7 +210,7 @@ class Element extends React.Component{
                     className="dropdown-item"
                     onClick={this.click}
                 >
-                    Layer {this.props.id}
+                    {this.layerName()}
                 </div>
             </li>
         );

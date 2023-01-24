@@ -1,22 +1,20 @@
 import React from "react";
 
 
-class ButtonProgress extends React.Component {
+class ProgressBar extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-        };
     }
 
     render() {
         console.log(`Rendering BUTTON PROGRESS`);
         return (
             <>
-                <div className="progress-bar bg-warning" role="progressbar"
+                <div className="progress-bar bg-info" role="progressbar"
                      style={{
-                         width: `${this.props.progress_percentage}%`,
+                         width: `${this.props.percentage}%`,
                          height: "100%",
-                         position: "absolute",
+                         position: this.props.position,
                          top: "0",
                          left: "0"
                      }}>
@@ -34,4 +32,4 @@ class ButtonProgress extends React.Component {
     //==========================================================================
 }
 
-export default ButtonProgress;
+export default ProgressBar;
