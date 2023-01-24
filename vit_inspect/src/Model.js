@@ -3,6 +3,7 @@ import ModelItem from "./ModelItem";
 import ModelSelector from "./ModelSelector";
 import PixelQuery from "./PixelQuery";
 import Sidebar from "./Sidebar";
+import RightSidebar from "./RightSidebar";
 import Visualizer from "./Visualizer";
 
 // The import statement is for the webpack to know the dependence on
@@ -264,7 +265,6 @@ class Model extends React.Component {
                 <main>
                     <Sidebar
                         vi_params={this.state.vi_params}
-                        //len_in_patches={this.state.model.params.len_in_patches}
                         model={this.state.model}
                         pf={this.pf}
                     />
@@ -275,6 +275,11 @@ class Model extends React.Component {
                         // and affected components be updated?
                         selected_layer={this.state.vi_params.selected_layer}
                         selected_token={this.state.vi_params.selected_token}
+                    />
+                    <RightSidebar
+                        vi_params={this.state.vi_params}
+                        model={this.state.model}
+                        pf={this.pf}
                     />
                 </main>
             </div>

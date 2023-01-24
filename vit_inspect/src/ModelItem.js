@@ -42,7 +42,7 @@ class ModelItem extends React.Component {
         return (
             <>
                 <a
-                    className="list-group-item list-group-item-action active"
+                    className="list-group-item list-group-item-action"
                     aria-current="true"
                     onClick={this.click}
                 >

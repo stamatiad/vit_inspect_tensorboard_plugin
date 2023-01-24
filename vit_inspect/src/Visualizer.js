@@ -36,9 +36,6 @@ class Visualizer extends React.Component {
                             position={"relative"}
                         />
                     </div>
-                    <div className={"row"}>
-                        <p className={"fs-5"}>Layer: </p>
-                    </div>
                     <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
                          id={"visualization"}>
                         <div style={this.makeGridStyle()}>
@@ -59,6 +56,11 @@ class Visualizer extends React.Component {
     // Props functions. These operate and return, based ONLY on component props.
     //==========================================================================
 
+    //TODO: These need refactoring: just make one call inside makeGrid
+    // (pre-render), so everything gets updated at the same time. And avoid
+    // this yo-yo updating. My current issue is that currentProgress might
+    // fail to get back to zero if user clicks onto another layer before the
+    // previous load completes.
     fromPropsGridParams(){
         let num_layers = this.props.model.params.num_layers;
         let num_heads = this.props.model.params.num_heads;

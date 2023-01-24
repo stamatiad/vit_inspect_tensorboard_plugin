@@ -66,19 +66,6 @@ class PixelQuery extends React.Component {
         this.fetchBatchBlobKey = this.fetchBatchBlobKey.bind(this);
     }
 
-    shouldComponentUpdate(nextProps, nextState, nextContext) {
-        // Check if user selected the same model as before:
-        if ((this.props.model.run === nextProps.model.run) &&
-            (this.props.model.tag === nextProps.model.tag)){
-            // TODO: THIS DOES NOT MATTER, since they get props-updated on change.
-            // TODO: MAKE SURE that component updates after state change
-            //  also! Because the batch img changes the state!!!
-            return true;
-        } else {
-            return true;
-        }
-    }
-
     render(){
         console.log(`Rendering PIXELQUERY`);
         // TODO: make sure that always img-thumbnail and grid will

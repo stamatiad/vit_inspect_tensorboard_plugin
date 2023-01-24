@@ -9,9 +9,6 @@ class Sidebar extends React.Component {
         this.state = {};
     }
 
-    updateParent(state) {
-        // Passes the child state to the parent.
-    }
 
     render(){
         console.log(`Rendering SIDEBAR`);
@@ -39,17 +36,6 @@ class Sidebar extends React.Component {
                     pf={this.props.pf}
                 />
                 <hr/>
-                <span className="fs-5"> Layer and Pixel Query</span>
-                <LayerQuery
-                    model={this.props.model}
-                    pf={this.props.pf}
-                />
-                <PixelQuery
-                    //len_in_patches={this.props.len_in_patches}
-                    model={this.props.model}
-                    pf={this.props.pf}
-                    queryPixel={this.props.queryPixel}
-                />
                 <div>
                     <p>stamatiad.st@gmail.com</p>
                 </div>
