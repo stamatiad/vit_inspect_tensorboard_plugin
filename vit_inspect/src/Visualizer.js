@@ -186,6 +186,8 @@ class Visualizer extends React.Component {
         if (this.imgmat_len < imgmat_len){
             this.currentProgress += this.imgmat_len;
             this.imgmat_len = imgmat_len;
+        } else {
+            this.imgmat_len = imgmat_len;
         }
 
 
