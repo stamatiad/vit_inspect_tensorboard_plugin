@@ -20,9 +20,9 @@
     "webpack-cli": "4.10.0"
   },
   "scripts": {
-    "dev": "webpack --config webpack.config.js",
-    "watch": "webpack --watch --config webpack.config.js",
-    "build": "webpack --config webpack.config.js"
+    "dev": "webpack --config webpack-development.config.js",
+    "watch": "webpack --watch --config webpack-development.config.js",
+    "build": "webpack --config webpack-production.config.js"
   },
   "eslintConfig": {
     "parserOptions": {
