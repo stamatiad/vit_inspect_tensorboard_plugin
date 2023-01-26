@@ -36,10 +36,12 @@ class Visualizer extends React.Component {
                             position={"relative"}
                         />
                     </div>
-                    <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
-                         id={"visualization"}>
-                        <div style={this.makeGridStyle()}>
-                            {this.makeGrid()}
+                    <div className={"row"}>
+                        <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
+                             id={"visualization"}>
+                            <div style={this.makeGridStyle()}>
+                                {this.makeGrid()}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -241,7 +243,8 @@ class ImageMap extends React.Component{
                      style={{
                          gridArea: `${this.props.layer} ${this.props.head} 
                              ${this.props.layer} ${this.props.head}`,
-                         display: this.props.display
+                         display: this.props.display,
+                         minWidth: "0"
                 }}
                 >
                     <img
