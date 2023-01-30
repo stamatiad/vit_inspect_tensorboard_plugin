@@ -37,16 +37,16 @@ _IMGHDR_TO_MIMETYPE = {
 }
 
 _DEFAULT_IMAGE_MIMETYPE = "application/octet-stream"
-_DEFAULT_DOWNSAMPLING = 10  # images per time series
 
-# Debug info:
-import pydevd_pycharm
-pydevd_pycharm.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)
+if False:
+    # Debug info:
+    import pydevd_pycharm
+    pydevd_pycharm.settrace('localhost', port=4444, stdoutToServer=True, stderrToServer=True)
 
 
 class VitInspectPlugin(base_plugin.TBPlugin):
     plugin_name = metadata.PLUGIN_NAME
-    downsample_to = 1000
+    downsample_to = 10000
 
     def __init__(self, context):
         """Instantiates VitInspectPlugin. By definition, we assume that any
@@ -72,56 +72,6 @@ class VitInspectPlugin(base_plugin.TBPlugin):
         self.debug_info = {}
         # self.debug_info['context'] =
 
-        if False:
-            #This seesm to get my runs!
-            runs = self.multiplexer.Runs()
-            events = self.multiplexer.Tensors(".", "ViT16")
-            content = self.multiplexer.PluginRunToTagToContent("vit_inspect")
-
-
-        if False:
-            # How list plugins works?
-            #tensorboard/backend/event_processing/data_provider.py
-            # list_plugins(), might have timeseries with DATA_CLASS_UNKNOWN
-
-            #TODO: can you load individual runs with EventMultiplexer? From
-            # backend/event_processing/plugin_event_multiplexer.py
-
-            # Gather some info about what summaries exist:
-            print(
-                self.data_provider.list_plugins(
-                    ctx=context, experiment_id=""
-                )
-            )
-            # So we only wrote with 'images' plugin. Lets get the events:
-            # INFO: the run_tag_filter and downsample is mandatory!
-            event = self.data_provider.read_blob_sequences(
-                ctx=context,
-                experiment_id="",
-                plugin_name=self.plugin_name,
-                downsample=self.downsample_to,
-                run_tag_filter=provider.RunTagFilter(runs=["."], tags=["ViT16"]),
-            )
-
-            datum = event["."]["ViT16"][0]
-            for val in range(len(datum.values)):
-                print(self._data_provider_query(datum.values[val]))
-
-            # Get image data:
-            ctx = context
-            blob_key = datum.values[3].blob_key
-            data = self._get_generic_data_individual_image(ctx, blob_key)
-            image_type = imghdr.what(None, data)
-            content_type = _IMGHDR_TO_MIMETYPE.get(
-                image_type, _DEFAULT_IMAGE_MIMETYPE
-            )
-
-
-            # From tensorboard/data/provider.py
-            # Get the blob_keys:
-            blob = self.data_provider.read_blob_sequences(
-                context, "", self.plugin_name, 1000
-            )
 
 
     def get_plugin_apps(self):
