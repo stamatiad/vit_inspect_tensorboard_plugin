@@ -63,7 +63,7 @@ class Model extends React.Component {
         this.pf = {
             fetchImgBlobKey(run, tag, sample, callback) {
                 // Returns a promise!
-                var url = `http://localhost:6006/data/plugin/vit_inspect/images?run=${run}&tag=${tag}&sample=${sample}`;
+                var url = `/data/plugin/vit_inspect/images?run=${run}&tag=${tag}&sample=${sample}`;
                 const blob_key = fetch(url)
                     .then((response) => {
                         //TODO: how do you handlee/notice this error?
@@ -101,7 +101,7 @@ class Model extends React.Component {
 
             fetchLayerBlobKeys(run, tag, layer, callback) {
                 // Returns a promise!
-                var url = `http://localhost:6006/data/plugin/vit_inspect/layers?run=${run}&tag=${tag}&layer=${layer}`;
+                var url = `/data/plugin/vit_inspect/layers?run=${run}&tag=${tag}&layer=${layer}`;
                 const blob_keys = fetch(url)
                     .then((response) => {
                         //TODO: how do you handlee/notice this error?
@@ -201,7 +201,7 @@ class Model extends React.Component {
             },
 
             fetchRunsTags() {
-                var url = "http://localhost:6006/data/plugin/vit_inspect/tags";
+                var url = "/data/plugin/vit_inspect/tags";
                 const raw_tags = fetch(url)
                     .then((response) => {
                         //TODO: how do you handlee/notice this error?
