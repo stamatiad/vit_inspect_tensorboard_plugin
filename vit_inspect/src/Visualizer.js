@@ -171,7 +171,7 @@ class Visualizer extends React.Component {
         if (attnw_arr.length == 0){
             return "";
         } else {
-            return `individualImage?blob_key=${attnw_arr[layer_id][wid]}}`;
+            return `individualImage?blob_key=${attnw_arr[layer_id][wid]}`;
         }
     }
 
