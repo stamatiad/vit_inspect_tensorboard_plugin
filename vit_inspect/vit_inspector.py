@@ -1,5 +1,8 @@
 import numpy as np
-from matplotlib.pyplot import colormaps as cmap
+# Colab defaults to pre 3.5 matplotlib. So use the old cmaps syntax and not
+# the newer ColormapRegistry:
+# https://matplotlib.org/stable/api/prev_api_changes/api_changes_3.6.0.html#pending-deprecation-top-level-cmap-registration-and-access-functions-in-mpl-cm
+import matplotlib.cm as cmaps
 import tensorflow as tf
 from contextlib import contextmanager
 
@@ -49,6 +52,6 @@ def maps_to_imgs(arr):
     # TODO: Again, the total dims and reshaping should be handled more
     #  generally, not for the specific example.
     # TODO: ALSO, these should be softmaxed so normalized to one?
-    arr_rgb = cmap['viridis'](arr)[..., :3]
+    arr_rgb = cmaps.get_cmap('viridis')(arr)[..., :3]
 
     return arr_rgb
