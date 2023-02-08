@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import colormaps as cmap
+from matplotlib.pyplot import colormaps as cmap
 import tensorflow as tf
 from contextlib import contextmanager
 
