@@ -31,7 +31,7 @@ known
 repos:
 * Self-Supervised Vision Transformers with DINO (PyTorch):
   * `https://github.com/facebookresearch/dino`
-    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/stamatiad/vit_inspect_tensorboard_plugin/blob/develop/examples/vi_example.ipynb)
+    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/stamatiad/vit_inspect_tensorboard_plugin/blob/main/examples/vi_example.ipynb)
 * TensorFlow (TODO)
   * (TODO)
 
