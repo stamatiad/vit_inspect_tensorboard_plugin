@@ -7,7 +7,7 @@ ViT models.
 Its goal is to be highly flexible and easy to integrate ('plug-and-play') 
 on python models.
 
-![Screenshot](vit_inspect/docs/overview.gif "Basic example")
+![Screenshot](.github/overview.gif "Basic example")
 
 ## Features
 - We provide a custom TensorBoard (TB) summary writer that can be flexibly
