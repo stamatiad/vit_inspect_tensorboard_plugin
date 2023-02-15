@@ -29,8 +29,28 @@ import urllib
 
 from vit_inspect import metadata
 import re
+from pathlib import Path
+import logging
 
-
+log_file = str(Path(os.getcwd()).joinpath('vit_inspect.log'))
+print(f"VI log dir is: {log_file}")
+# Setup logger:
+'''
+logging.basicConfig(
+    filename=log_file,
+    filemode='w',
+    encoding='utf-8',
+    level=logging.DEBUG
+)
+'''
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+log_format = logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(message)s')
+log_handler = logging.FileHandler(log_file)
+log_handler.setLevel(logging.DEBUG)
+log_handler.setFormatter(log_format)
+logger.addHandler(log_handler)
 
 _IMGHDR_TO_MIMETYPE = {
     "png": "image/png",
@@ -64,7 +84,10 @@ class VitInspectPlugin(base_plugin.TBPlugin):
 
         # Checking in backend/application.py, context.multiplexes should be
         # none.
+
         print("Initializing VIT INSPECT PLUGIN...")
+        logger.info("Starting VI plugin")
+
         self.data_provider = context.data_provider
 
         # Keep a dict with debug info, that you can pass to the frontent if
@@ -104,11 +127,23 @@ class VitInspectPlugin(base_plugin.TBPlugin):
         :param request:
         :return:
         """
+        # This is a Get request:
         del request  # unused
-        filepath = os.path.join(os.path.dirname(__file__), "static", "js", "main.js")
-        with open(filepath) as infile:
-            contents = infile.read()
-        return werkzeug.Response(contents, content_type="text/javascript")
+        # Get the js module of the VI:
+        filepath = Path(__file__).parent.joinpath("static", "js", "main.js")
+        # Check if main module exists. If not, should indicate an error in
+        # installation (setup.py).
+        if not filepath.exists():
+            logger.critical(f"JS module not found in:\n\t {filepath}")
+            return werkzeug.exceptions.InternalServerError(
+                description="Main js module not found!",
+                response=None
+            )
+        else:
+            # Check that it exists, else throw an error:
+            with open(filepath) as infile:
+                contents = infile.read()
+            return werkzeug.Response(contents, content_type="text/javascript")
 
     @wrappers.Request.application
     def _serve_css(self, request):
