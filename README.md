@@ -31,8 +31,10 @@ known
 repos:
 * Self-Supervised Vision Transformers with DINO (PyTorch):
   * `https://github.com/facebookresearch/dino`
-    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/stamatiad/vit_inspect_tensorboard_plugin/blob/main/examples/vi_example.ipynb)
-* TensorFlow (TODO)
+  * 
+    [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/stamatiad/vit_inspect_tensorboard_plugin/blob/main/examples/vi_example_pytorch.ipynb)
+* Vision Transformer and MLP-Mixer Architectures (Tensorflow/Jax)
+  * `https://github.com/google-research/vision_transformer`
   * (TODO)
 
 ## Installation
