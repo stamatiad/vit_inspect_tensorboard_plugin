@@ -60,11 +60,11 @@ pip uninstall vit_inspect
 
 > If you want to rebuild it or customize it, install VI in develop mode:
 > ```python
-> python setup.py develop
+> python install --editable .
 >```
 > And uninstall it:
 > ```python
-> python setup.py develop -u
+> python uninstall vit_inspect
 >```
 > 
 
