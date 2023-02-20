@@ -1,0 +1,2 @@
+include vit_inspect/static/js/*.js
+include vit_inspect/static/css/*.css
