@@ -17,4 +17,18 @@
 import setuptools
 
 
-setuptools.setup()
+setuptools.setup(
+    name="vit_inspect",
+    version="0.1.0",
+    description="ViT inspection plugin.",
+    packages=["vit_inspect"],
+    package_data={
+        "vit_inspect": ["static/**"],
+    },
+    include_package_data=True,
+    entry_points={
+        "tensorboard_plugins": [
+            "vit_inspect = vit_inspect.vit_inspect_plugin:VitInspectPlugin",
+        ],
+    },
+)
