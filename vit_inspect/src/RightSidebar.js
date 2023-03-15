@@ -1,7 +1,7 @@
 import React from "react";
 import ModelSelector from "./ModelSelector";
 import PixelQuery from "./PixelQuery";
-import LayerQuery from "./LayerQuery";
+import LayerHeadQuery from "./LayerHeadQuery";
 
 class RightSidebar extends React.Component {
     constructor(props) {
@@ -15,7 +15,7 @@ class RightSidebar extends React.Component {
             <div className="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark"
                  id={"sidebar"}>
                 <span className="fs-5"> Layer and Pixel Query</span>
-                <LayerQuery
+                <LayerHeadQuery
                     model={this.props.model}
                     pf={this.props.pf}
                 />

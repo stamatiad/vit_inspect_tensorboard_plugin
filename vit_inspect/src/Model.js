@@ -200,6 +200,24 @@ class Model extends React.Component {
                 });
             },
 
+            async selectHeadAsync(head_id) {
+                // This function should reside in the main Model, so to avoid cyclic
+                // state updates (are these a thing??).
+                var cmp = this;
+
+                // Then update the state of the model. We need to wait until
+                // everything is ready to update the Model, because the visualizer
+                // will re-render.
+
+                return cmp.setStateAsync({
+                    ...cmp.state,
+                    vi_params: {
+                        ...cmp.state.vi_params,
+                        selected_head: head_id,
+                    },
+                });
+            },
+
             fetchRunsTags() {
                 var url = "/data/plugin/vit_inspect/tags";
                 const raw_tags = fetch(url)
@@ -249,6 +267,7 @@ class Model extends React.Component {
 
         this.pf.selectModelAsync = this.pf.selectModelAsync.bind(this);
         this.pf.selectLayerAsync = this.pf.selectLayerAsync.bind(this);
+        this.pf.selectHeadAsync = this.pf.selectHeadAsync.bind(this);
         this.pf.fetchLayerMapsAsync = this.pf.fetchLayerMapsAsync.bind(this);
         this.pf.loadAttnMapsToModelAsync = this.pf.loadAttnMapsToModelAsync.bind(this);
         this.pf.queryPixel = this.pf.queryPixel.bind(this);

@@ -2,23 +2,24 @@ import React from "react";
 import {Range} from "react-range";
 
 
-class LayerQuery extends React.Component {
+class LayerHeadQuery extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             // This is required to be an array by react-range:
             selected_layer: 1,
-            values: [1],
+            selected_head: 1,
             // The progress related state, will re-render the progress
             // button component, yet not this component.
             progress_percentage: 0,
             progress_label: "Select Layer"
         };
         this.selectLayer = this.selectLayer.bind(this);
+        this.selectHead = this.selectHead.bind(this);
     }
 
     render(){
-        console.log(`Rendering LAYERQUERY`);
+        console.log(`Rendering LAYERHEADQUERY`);
         return (
             <>
                 {this.makeRangeSelectors()}
@@ -45,28 +46,49 @@ class LayerQuery extends React.Component {
         }
     }
 
-    selectLayer = (layer_id) => {
+    selectLayer = (event) => {
         // Since the usage of react-range, input layer_id is an array!
         var cmp = this;
-        if (this.state.selected_layer == layer_id[0]){
+        var layer_id = parseInt(event.target.value);
+        if (this.state.selected_layer == layer_id){
             return;
         }
 
         // intercept layer selection to update local state:
         let label_str = "";
         cmp.setStateAsync({
-            selected_layer: layer_id[0],
-            values: layer_id
+            selected_layer: layer_id,
         })
             .then(()=>{
                 // Inform the model about the layer selection:
-                cmp.props.pf.selectLayerAsync(layer_id[0]);
+                cmp.props.pf.selectLayerAsync(layer_id);
             })
             .then(()=>{
-                console.log(`${label_str} loaded!`);
+                console.log(`Layer ${label_str} loaded!`);
             });
     }
 
+    selectHead = (event) => {
+        // Since the usage of react-range, input layer_id is an array!
+        var cmp = this;
+        var head_id = parseInt(event.target.value);
+        if (this.state.selected_head == head_id){
+            return;
+        }
+
+        // intercept layer selection to update local state:
+        let label_str = "";
+        cmp.setStateAsync({
+            selected_head: head_id,
+        })
+            .then(()=>{
+                // Inform the model about the head selection:
+                cmp.props.pf.selectHeadAsync(head_id);
+            })
+            .then(()=>{
+                console.log(`Head ${label_str} loaded!`);
+            });
+    }
 
     makeRangeSelectors () {
         var num_layers = this.props.model.params.num_layers;
@@ -75,37 +97,24 @@ class LayerQuery extends React.Component {
             return <></>;
         } else {
             return (
-                <Range
-                    step={1}
-                    min={1}
-                    max={this.props.model.params.num_layers}
-                    values={this.state.values}
-                    onChange={this.selectLayer}
-                    renderTrack={({ props, children }) => (
-                        <div
-                            {...props}
-                            style={{
-                                ...props.style,
-                                height: '6px',
-                                width: '100%',
-                                backgroundColor: '#ccc'
-                            }}
-                        >
-                            {children}
-                        </div>
-                    )}
-                    renderThumb={({ props }) => (
-                        <div
-                            {...props}
-                            style={{
-                                ...props.style,
-                                height: '42px',
-                                width: '42px',
-                                backgroundColor: '#999'
-                            }}
-                        />
-                    )}
-                />
+                <div>
+                    <input
+                        type={"range"}
+                        onChange={this.selectLayer}
+                        step={1}
+                        min={1}
+                        max={this.props.model.params.num_layers}
+                        value={this.state.selected_layer}
+                    />
+                    <input
+                        type={"range"}
+                        onChange={this.selectHead}
+                        step={1}
+                        min={1}
+                        max={this.props.model.params.num_heads}
+                        value={this.state.selected_head}
+                    />
+                </div>
 
             );
         }
@@ -114,4 +123,4 @@ class LayerQuery extends React.Component {
 
 }
 
-export default LayerQuery;
+export default LayerHeadQuery;
