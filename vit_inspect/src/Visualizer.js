@@ -37,10 +37,18 @@ class Visualizer extends React.Component {
                         />
                     </div>
                     <div className={"row"}>
-                        <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
-                             id={"visualization"}>
-                            <div style={this.makeGridStyle()}>
-                                {this.makeGrid()}
+                        <div className={"row"}>
+                            <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
+                                id={"preview-viz"}>
+                                <div style={this.makeGridStyle()}>
+                                    {this.makePreviewGrid()}
+                                </div>
+                            </div>
+                        </div>
+                        <div className={"row"}>
+                            <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
+                                id={"focus-viz"}>
+                                {this.makeFocusViz()}
                             </div>
                         </div>
                     </div>
@@ -63,10 +71,11 @@ class Visualizer extends React.Component {
     // this yo-yo updating. My current issue is that currentProgress might
     // fail to get back to zero if user clicks onto another layer before the
     // previous load completes.
-    fromPropsGridParams(){
+    GridParamsFromProps(){
         let num_layers = this.props.model.params.num_layers;
         let num_heads = this.props.model.params.num_heads;
         let selected_layer = this.props.vi_params.selected_layer;
+        let selected_head = this.props.vi_params.selected_head;
 
         let start_layer = selected_layer;
         let end_layer = selected_layer + 1;
@@ -78,6 +87,8 @@ class Visualizer extends React.Component {
 
         // Compute keys also. This way you can compare them and know which
         // ImageMats will you add, and which preexist.
+        //TODO: maintain the display_bool functionality, inside this
+        // function, even if it should be outside, in a dedicated function.
         let keys = [];
         let display_bool = [];
         for (let l=0; l < num_layers; l++) {
@@ -94,7 +105,9 @@ class Visualizer extends React.Component {
                 }
             }
         }
-        return [start_layer, end_layer, keys, display_bool];
+        //Keys are the id of the images, and display is the rendering bool
+        // for each image of te grid.
+        return [selected_layer, selected_head, keys, display_bool];
     }
 
     fromPropsMaxProgress(){
@@ -102,7 +115,7 @@ class Visualizer extends React.Component {
         This is an alternative to memoization.
          */
         let num_heads = this.props.model.params.num_heads;
-        let [start_layer, end_layer,,] = this.fromPropsGridParams();
+        let [start_layer, end_layer,,] = this.GridParamsFromProps();
 
         //TODO: Here the progress should recompute and set state the
         // progress requirements. Here It gets the info from layer query cmp.
@@ -154,9 +167,10 @@ class Visualizer extends React.Component {
 
     makeGridStyle() {
         // Generate the styles to be used in grid:
+        // TODO: This needs to change for the show_all layers
         return {
             display: "grid",
-            gridTemplateRows: "repeat("+this.props.model.params.num_layers+", 1fr)",
+            gridTemplateRows: "repeat("+1+", 1fr)",
             gridTemplateColumns: "repeat("+this.props.model.params.num_heads+", 1fr)"
         };
     }
@@ -175,11 +189,11 @@ class Visualizer extends React.Component {
         }
     }
 
-    makeGrid () {
+    makePreviewGrid () {
         let num_layers = this.props.model.params.num_layers;
         let num_heads = this.props.model.params.num_heads;
-        let [start_layer, end_layer, keys, display_bool] =
-            this.fromPropsGridParams();
+        let [selected_layer, selecetd_head, keys, display_bool] =
+            this.GridParamsFromProps();
 
         // THIS IS A HACK: If new ImageMats to be rendered are more than the
         // previous, add the difference to the currentProgress.
@@ -204,6 +218,11 @@ class Visualizer extends React.Component {
 
         //TODO: this should render as a grid only if user selects to show
         // all layers. Else should render as a line.
+
+        //TODO: I maintain this rance only for the 'show all layers'
+        // functionality.
+        var start_layer = selected_layer;
+        var end_layer = selected_layer + 1;
         for (let l=start_layer; l < end_layer; l++) {
             for (let h=0; h < num_heads; h++) {
                 // Get the weight mat id:
@@ -225,6 +244,41 @@ class Visualizer extends React.Component {
                 );
             }
         }
+        return grid;
+    };
+
+    makeFocusViz () {
+        let num_layers = this.props.model.params.num_layers;
+        let num_heads = this.props.model.params.num_heads;
+        let [selected_layer, selected_head, keys, display_bool] =
+            this.GridParamsFromProps();
+
+        // Array of React Components:
+        var grid = [];
+
+        if ((typeof num_layers == 'undefined') || (typeof num_heads == 'undefined')){
+            return <></>;
+        }
+
+        //TODO: this should render as a grid only if user selects to show
+        // all layers. Else should render as a line.
+
+        // Get the weight mat id:
+        // TODO: adapt to the selection of a single layer
+        //var wid = (l*num_heads+h) * total_tokens + selected_token;
+        //TODO: you should fetchLayerMaps() again, since we are
+        // changing layer!
+
+        //var wid = l * num_heads + h;
+        grid.push(
+            <ImageFocusMap
+                key={keys[selected_layer][selected_head]}
+                display={display_bool[selected_layer][selected_head]}
+                layer={selected_layer}
+                head={selected_head}
+                src={this.makeImgUrl(selected_layer,selected_head)}
+            />
+        );
         return grid;
     };
 
@@ -262,6 +316,47 @@ class ImageMap extends React.Component{
             ()=>{
                 this.props.onLoadCallback();
             }
+    }
+
+    //==========================================================================
+    // Props functions. These operate and return, based ONLY on component props.
+    //==========================================================================
+
+    fromPropsGetDisplay(){
+        if (this.props.display) {
+            return "block";
+        } else {
+            return "none";
+        }
+    }
+}
+
+class ImageFocusMap extends React.Component{
+    constructor(props) {
+        super(props);
+        this.img = React.createRef();
+    }
+
+    render(){
+        return (
+            <>
+                <div className="" id="weights-img"
+                     style={{
+                         display: this.props.display,
+                         minWidth: "0"
+                     }}
+                >
+                <img
+                    className={"img-thumbnail"}
+                    src={this.props.src}
+                    ref={this.img}
+                />
+                </div>
+            </>
+        );
+    }
+
+    componentDidMount() {
     }
 
     //==========================================================================

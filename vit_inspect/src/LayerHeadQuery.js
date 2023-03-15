@@ -108,8 +108,8 @@ class LayerHeadQuery extends React.Component {
                         type={"range"}
                         onChange={this.selectLayer}
                         step={1}
-                        min={1}
-                        max={this.props.model.params.num_layers}
+                        min={0}
+                        max={this.props.model.params.num_layers-1}
                         value={this.state.selected_layer}
                     />
                     <label
@@ -122,8 +122,8 @@ class LayerHeadQuery extends React.Component {
                         type={"range"}
                         onChange={this.selectHead}
                         step={1}
-                        min={1}
-                        max={this.props.model.params.num_heads}
+                        min={0}
+                        max={this.props.model.params.num_heads-1}
                         value={this.state.selected_head}
                     />
                 </div>
