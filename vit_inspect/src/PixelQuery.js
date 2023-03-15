@@ -72,6 +72,11 @@ class PixelQuery extends React.Component {
         // have the same padding!
         return (
             <div>
+                <label
+                    htmlFor="weights-img"
+                    className="form-label">
+                    Select Patch
+                </label>
                 <div className="pixelq-img" id="weights-img">
                     <img className="img-thumbnail" src={this.state.batch_img_url}
                          style={{padding: "0.25rem"}}/>

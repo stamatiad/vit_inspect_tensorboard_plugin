@@ -1,7 +1,7 @@
 import React from "react";
 import ModelSelector from "./ModelSelector";
 import PixelQuery from "./PixelQuery";
-import LayerQuery from "./LayerQuery";
+import LayerHeadQuery from "./LayerHeadQuery";
 
 class Sidebar extends React.Component {
     constructor(props) {
