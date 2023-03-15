@@ -98,7 +98,13 @@ class LayerHeadQuery extends React.Component {
         } else {
             return (
                 <div>
+                    <label
+                        htmlFor="layerSelector"
+                        className="form-label">
+                        Select Layer
+                    </label>
                     <input
+                        id={"layerSelector"}
                         type={"range"}
                         onChange={this.selectLayer}
                         step={1}
@@ -106,7 +112,13 @@ class LayerHeadQuery extends React.Component {
                         max={this.props.model.params.num_layers}
                         value={this.state.selected_layer}
                     />
+                    <label
+                        htmlFor="headSelector"
+                        className="form-label">
+                        Select Head
+                    </label>
                     <input
+                        id={"headSelector"}
                         type={"range"}
                         onChange={this.selectHead}
                         step={1}
