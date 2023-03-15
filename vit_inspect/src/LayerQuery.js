@@ -1,11 +1,14 @@
 import React from "react";
+import {Range} from "react-range";
 
 
 class LayerQuery extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selected_layer: -1,
+            // This is required to be an array by react-range:
+            selected_layer: 1,
+            values: [1],
             // The progress related state, will re-render the progress
             // button component, yet not this component.
             progress_percentage: 0,
@@ -17,19 +20,9 @@ class LayerQuery extends React.Component {
     render(){
         console.log(`Rendering LAYERQUERY`);
         return (
-            <div className={"btn-group-vertical w-100"}>
-                <div className="dropdown btn-group">
-                    <button className="btn btn-outline-light dropdown-toggle"
-                            type="button" id="layerDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                        {this.getLayerName()}
-                    </button>
-                    <ul className="dropdown-menu"
-                        aria-labelledby="layerDropdown">
-                        {this.makeList()}
-                    </ul>
-                </div>
-            </div>
+            <>
+                {this.makeRangeSelectors()}
+            </>
         );
     }
 
@@ -53,19 +46,21 @@ class LayerQuery extends React.Component {
     }
 
     selectLayer = (layer_id) => {
+        // Since the usage of react-range, input layer_id is an array!
         var cmp = this;
-        if (this.state.selected_layer == layer_id){
+        if (this.state.selected_layer == layer_id[0]){
             return;
         }
 
         // intercept layer selection to update local state:
         let label_str = "";
         cmp.setStateAsync({
-            selected_layer: layer_id
+            selected_layer: layer_id[0],
+            values: layer_id
         })
             .then(()=>{
                 // Inform the model about the layer selection:
-                cmp.props.pf.selectLayerAsync(layer_id);
+                cmp.props.pf.selectLayerAsync(layer_id[0]);
             })
             .then(()=>{
                 console.log(`${label_str} loaded!`);
@@ -73,59 +68,50 @@ class LayerQuery extends React.Component {
     }
 
 
-    makeList () {
-        var list = [];
+    makeRangeSelectors () {
         var num_layers = this.props.model.params.num_layers;
         // handle undefined case (not initialized yet):
         if (typeof num_layers == 'undefined'){
             return <></>;
-        }
-
-        for (let l=0; l < num_layers + 1; l++) {
-            list.push(
-                <Layer
-                    key={l}
-                    id={l}
-                    num_layers={num_layers}
-                    click={this.selectLayer}
+        } else {
+            return (
+                <Range
+                    step={1}
+                    min={1}
+                    max={this.props.model.params.num_layers}
+                    values={this.state.values}
+                    onChange={this.selectLayer}
+                    renderTrack={({ props, children }) => (
+                        <div
+                            {...props}
+                            style={{
+                                ...props.style,
+                                height: '6px',
+                                width: '100%',
+                                backgroundColor: '#ccc'
+                            }}
+                        >
+                            {children}
+                        </div>
+                    )}
+                    renderThumb={({ props }) => (
+                        <div
+                            {...props}
+                            style={{
+                                ...props.style,
+                                height: '42px',
+                                width: '42px',
+                                backgroundColor: '#999'
+                            }}
+                        />
+                    )}
                 />
+
             );
         }
-        return list;
     };
 
 
 }
 
-class Layer extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state = {};
-    }
-
-    click = () => {
-        this.props.click(this.props.id)
-    }
-
-    layerName() {
-        if (this.props.id < this.props.num_layers) {
-            return `Layer ${this.props.id}`;
-        } else {
-            return "All Layers";
-        }
-    }
-
-    render() {
-        return (
-            <li>
-                <div
-                    className="dropdown-item"
-                    onClick={this.click}
-                >
-                    {this.layerName()}
-                </div>
-            </li>
-        );
-    }
-}
 export default LayerQuery;
