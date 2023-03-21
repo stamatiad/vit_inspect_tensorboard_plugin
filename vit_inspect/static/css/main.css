@@ -111,3 +111,9 @@ main {
   width:8.33%;
   float:left;
 }
+
+.preview-thumbnail {
+  background-color: #ffffff;
+  border: 1px solid var(--bs-border-color);
+  max-width: 100%;
+}

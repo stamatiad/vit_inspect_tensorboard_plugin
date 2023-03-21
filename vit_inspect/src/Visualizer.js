@@ -38,6 +38,7 @@ class Visualizer extends React.Component {
                     </div>
                     <div className={"row"}>
                         <div className={"row"}>
+                            <div>Preview: Heads</div>
                             <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
                                 id={"preview-viz"}>
                                 <div style={this.makeGridStyle()}>
@@ -46,6 +47,7 @@ class Visualizer extends React.Component {
                             </div>
                         </div>
                         <div className={"row"}>
+                            <div>Head</div>
                             <div className="d-flex flex-column flex-shrink-0 p-3 text-dark bg-light"
                                 id={"focus-viz"}>
                                 {this.makeFocusViz()}
@@ -185,7 +187,8 @@ class Visualizer extends React.Component {
         if (attnw_arr.length == 0){
             return "";
         } else {
-            return `individualImage?blob_key=${attnw_arr[layer_id][wid]}`;
+            let blob_key = attnw_arr[layer_id][wid];
+            return `individualImage?blob_key=${blob_key}`;
         }
     }
 
@@ -232,13 +235,15 @@ class Visualizer extends React.Component {
                 // changing layer!
 
                 //var wid = l * num_heads + h;
+                let is_active = h == this.props.vi_params.selected_head ? true: false;
                 grid.push(
-                    <ImageMap
+                    <MapPreview
                         key={keys[l][h]}
                         display={display_bool[l][h]}
                         layer={l}
                         head={h}
                         src={this.makeImgUrl(l,h)}
+                        active={is_active}
                         onLoadCallback={this.onMapLoadCallback}
                     />
                 );
@@ -270,6 +275,7 @@ class Visualizer extends React.Component {
         // changing layer!
 
         //var wid = l * num_heads + h;
+        //TODO: the head_id is undefined. check it out.
         grid.push(
             <ImageFocusMap
                 key={keys[selected_layer][selected_head]}
@@ -284,7 +290,7 @@ class Visualizer extends React.Component {
 
 }
 
-class ImageMap extends React.Component{
+class MapPreview extends React.Component{
     constructor(props) {
         super(props);
         this.img = React.createRef();
@@ -302,7 +308,8 @@ class ImageMap extends React.Component{
                 }}
                 >
                     <img
-                        className={"img-thumbnail"}
+                        className={"preview-thumbnail"}
+                        style={this.fromStateGetStyle()}
                         src={this.props.src}
                         ref={this.img}
                     />
@@ -328,6 +335,15 @@ class ImageMap extends React.Component{
         } else {
             return "none";
         }
+    }
+
+    fromStateGetStyle(){
+        if (this.props.active) {
+            return {borderColor: "red"};
+        } else {
+            return {};
+        }
+
     }
 }
 
