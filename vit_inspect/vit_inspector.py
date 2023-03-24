@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.cm as cmaps
 import tensorflow as tf
 from contextlib import contextmanager
+from vit_inspect.summary_v2 import vi_summary
+import json
 
 
 
@@ -25,7 +27,7 @@ writer = tf.summary.create_file_writer("vi_logs")
 #save_att_weights = False
 
 @contextmanager
-def enable_vi():
+def enabled():
     """
     The vit inspect context manager, to enable inspection only during
     execution and not during initialization.
@@ -36,6 +38,28 @@ def enable_vi():
         yield None
     finally:
         _summary_is_active = False
+
+def create_model_thumbnail(img):
+    # Saves the image into the summary:
+    arrimg = np.asarray(img)
+    if len(arrimg.shape) < 3:
+        raise ValueError("Image should be a square matrix with 3 channels!")
+    if len(arrimg.shape) == 3:
+        arrimg = np.expand_dims(arrimg, axis=0)
+    # Make sure image's channels is the last dim:
+    if arrimg.shape[-1] > arrimg.shape[1]:
+        arrimg = np.moveaxis(arrimg, 1, -1)
+    flat_arr_rgb = tf.convert_to_tensor(
+        arrimg
+    )
+    with writer.as_default():
+        vi_summary(
+            f"b{params['batch_id']}",
+            flat_arr_rgb,
+            step=params["step"],
+            description=json.dumps(params)
+        )
+        writer.flush()
 
 def maps_to_imgs(arr):
     """
